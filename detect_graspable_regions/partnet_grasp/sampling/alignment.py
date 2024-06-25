@@ -9,6 +9,68 @@ import numpy as np
 import trimesh
 
 
+def shapenet_trans(verts: np.ndarray) -> np.ndarray:
+    """Computes the transform from the given mesh to a unit xy-diagonal and axis centered mesh
+       and returns the inverted transform.
+
+    Args:
+        verts (np.ndarray): Vertices of the mesh to get the transform to.
+
+    Returns:
+        np.ndarray: Homogeneus transformation matrix from a unit xy-diagonal and centered mesh to the given mesh.
+    """
+    x_min = np.min(verts[:, 0])
+    x_max = np.max(verts[:, 0])
+    x_center = (x_min + x_max) / 2
+    x_len = x_max - x_min
+    y_min = np.min(verts[:, 1])
+    y_max = np.max(verts[:, 1])
+    y_center = (y_min + y_max) / 2
+    y_len = y_max - y_min
+    z_min = np.min(verts[:, 2])
+    z_max = np.max(verts[:, 2])
+    z_center = (z_min + z_max) / 2
+
+    scale = np.sqrt(x_len ** 2 + y_len ** 2)
+
+    trans = np.array([
+        [0, 0, 1.0 / scale, -x_center / scale],
+        [0, 1.0 / scale, 0, -y_center / scale],
+        [-1 / scale, 0, 0, -z_center / scale],
+        [0, 0, 0, 1]
+    ], dtype=np.float32)
+    trans = np.linalg.inv(trans)
+
+    return trans
+
+
+def transform_vertices(trans: np.ndarray,
+                       in_verts: np.ndarray,
+                       in_faces: np.ndarray,
+                       rot: np.ndarray = None) -> trimesh.Trimesh:
+    """Applies homogeneous transformations to a given set of vertices and returns the resulting mesh.
+
+    Args:
+        trans (np.ndarray): Homogeneus transformation matrix.
+        in_verts (np.ndarray): Vertices of the mesh to transform.
+        in_faces (np.ndarray): Faces of the mesh to transform.
+        rot (np.ndarray, optional): Additional rotation to apply to the mesh. Defaults to None.
+
+    Returns:
+        trimesh.Trimesh: Transformed mesh.
+    """
+    verts = np.array(in_verts, dtype=np.float32)
+    verts = np.concatenate([verts, np.ones((verts.shape[0], 1), dtype=np.float32)], axis=1)
+    if rot is not None:
+        verts = verts @ rot @ (trans.T)
+    else:
+        verts = verts @ (trans.T)
+    verts = verts[:, :3]
+
+    out_mesh = trimesh.Trimesh(vertices=verts, faces=in_faces)
+    return out_mesh
+
+
 def align_to_partnet(
         base_partnet_path: str,
         base_shapenet_path: str,
@@ -49,68 +111,6 @@ def align_to_partnet(
     if cat_name not in CAT2SYNSET.keys():
         raise ValueError(f"Category '{cat_name}' not in dictionary map to shapenet!")
 
-    def shapenet_trans(verts: np.ndarray) -> np.ndarray:
-        """Computes the transform from the given mesh to a unit xy-diagonal and axis centered mesh
-           and returns the inverted transform.
-
-        Args:
-            verts (np.ndarray): Vertices of the mesh to get the transform to.
-
-        Returns:
-            np.ndarray: Homogeneus transformation matrix from a unit xy-diagonal and centered mesh to the given mesh.
-        """
-        x_min = np.min(verts[:, 0])
-        x_max = np.max(verts[:, 0])
-        x_center = (x_min + x_max) / 2
-        x_len = x_max - x_min
-        y_min = np.min(verts[:, 1])
-        y_max = np.max(verts[:, 1])
-        y_center = (y_min + y_max) / 2
-        y_len = y_max - y_min
-        z_min = np.min(verts[:, 2])
-        z_max = np.max(verts[:, 2])
-        z_center = (z_min + z_max) / 2
-        z_len = z_max - z_min
-
-        scale = np.sqrt(x_len**2 + y_len**2)
-        # scale = max(x_len, max(y_len, z_len))
-        # scale = 1/max_dim
-
-        trans = np.array([
-            [0, 0, 1.0 / scale, -x_center/scale],
-            [0, 1.0 / scale, 0, -y_center/scale],
-            [-1/scale, 0, 0, -z_center/scale],
-            [0, 0, 0, 1]
-        ], dtype=np.float32)
-        trans = np.linalg.inv(trans)
-        return trans
-
-    def transform_verts(trans: np.ndarray,
-                        in_verts: np.ndarray,
-                        in_faces: np.ndarray,
-                        rot: np.ndarray = None) -> trimesh.Trimesh:
-        """Applies homogeneous transformations to a given set of vertices and returns the resulting mesh.
-
-        Args:
-            trans (np.ndarray): Homogeneus transformation matrix.
-            in_verts (np.ndarray): Vertices of the mesh to transform.
-            in_faces (np.ndarray): Faces of the mesh to transform.
-            rot (np.ndarray, optional): Additional rotation to apply to the mesh. Defaults to None.
-
-        Returns:
-            trimesh.Trimesh: Transformed mesh.
-        """
-        verts = np.array(in_verts, dtype=np.float32)
-        verts = np.concatenate([verts, np.ones((verts.shape[0], 1), dtype=np.float32)], axis=1)
-        if rot is not None:
-            verts = verts @ rot @ (trans.T)
-        else:
-            verts = verts @ (trans.T)
-        verts = verts[:, :3]
-
-        out_mesh = trimesh.Trimesh(vertices=verts, faces=in_faces)
-        return out_mesh
-
     vs = []
     fs = []
     vid = 0
@@ -149,7 +149,7 @@ def align_to_partnet(
     partnet_mesh = trimesh.Trimesh(vertices=v_arr_ori, faces=f_arr-1)
     partnet_pts = trimesh.sample.sample_surface(partnet_mesh, 2000)[0]
 
-    shapenet_mesh_t = transform_verts(trans, shapenet_mesh.vertices, shapenet_mesh.faces)
+    shapenet_mesh_t = transform_vertices(trans, shapenet_mesh.vertices, shapenet_mesh.faces)
     shapenet_pts = trimesh.sample.sample_surface(shapenet_mesh_t, 2000)[0]
 
     dist_mat = cdist(shapenet_pts, partnet_pts)
@@ -157,7 +157,7 @@ def align_to_partnet(
 
     if chamfer_dist > 0.1:
         print(f"Misalignment detected ({chamfer_dist}), trying rotation")
-        shapenet_mesh_t = transform_verts(trans, shapenet_mesh.vertices, shapenet_mesh.faces, rot_mat(np.pi/2))
+        shapenet_mesh_t = transform_vertices(trans, shapenet_mesh.vertices, shapenet_mesh.faces, rot_mat(np.pi/2))
         shapenet_pts  = trimesh.sample.sample_surface(shapenet_mesh_t, 2000)[0]
         dist_mat = cdist(shapenet_pts, partnet_pts)
         chamfer_dist = dist_mat.min(0).mean() + dist_mat.min(1).mean()
@@ -169,22 +169,22 @@ def align_to_partnet(
     p_x_max = np.max(verts[:, 0])
     p_x_len = p_x_max - p_x_min
     p_y_min = np.min(verts[:, 1])
-    p_y_max = np.max(verts[:, 1])
-    p_y_len = p_y_max - p_y_min
+    # p_y_max = np.max(verts[:, 1])
+    # p_y_len = p_y_max - p_y_min
     p_z_min = np.min(verts[:, 2])
-    p_z_max = np.max(verts[:, 2])
-    p_z_len = p_z_max - p_z_min
+    # p_z_max = np.max(verts[:, 2])
+    # p_z_len = p_z_max - p_z_min
 
     verts = shapenet_mesh_t.vertices
     s_x_min = np.min(verts[:, 0])
     s_x_max = np.max(verts[:, 0])
     s_x_len = s_x_max - s_x_min
-    s_y_min = np.min(verts[:, 1])
-    s_y_max = np.max(verts[:, 1])
-    s_y_len = s_y_max - s_y_min
-    s_z_min = np.min(verts[:, 2])
-    s_z_max = np.max(verts[:, 2])
-    s_z_len = s_z_max - s_z_min
+    # s_y_min = np.min(verts[:, 1])
+    # s_y_max = np.max(verts[:, 1])
+    # s_y_len = s_y_max - s_y_min
+    # s_z_min = np.min(verts[:, 2])
+    # s_z_max = np.max(verts[:, 2])
+    # s_z_len = s_z_max - s_z_min
 
     f = p_x_len / s_x_len
     scale = np.array([
@@ -194,7 +194,7 @@ def align_to_partnet(
         [0, 0, 0, 0]
     ])
 
-    shapenet_mesh_t = transform_verts(scale, shapenet_mesh_t.vertices, shapenet_mesh_t.faces)
+    shapenet_mesh_t = transform_vertices(scale, shapenet_mesh_t.vertices, shapenet_mesh_t.faces)
     shapenet_pts  = trimesh.sample.sample_surface(shapenet_mesh_t, 2000)[0]
     dist_mat = cdist(shapenet_pts, partnet_pts)
     chamfer_dist = dist_mat.min(0).mean() + dist_mat.min(1).mean()
@@ -202,14 +202,14 @@ def align_to_partnet(
 
     verts = shapenet_mesh_t.vertices
     s_x_min = np.min(verts[:, 0])
-    s_x_max = np.max(verts[:, 0])
-    s_x_len = s_x_max - s_x_min
+    # s_x_max = np.max(verts[:, 0])
+    # s_x_len = s_x_max - s_x_min
     s_y_min = np.min(verts[:, 1])
-    s_y_max = np.max(verts[:, 1])
-    s_y_len = s_y_max - s_y_min
+    # s_y_max = np.max(verts[:, 1])
+    # s_y_len = s_y_max - s_y_min
     s_z_min = np.min(verts[:, 2])
-    s_z_max = np.max(verts[:, 2])
-    s_z_len = s_z_max - s_z_min
+    # s_z_max = np.max(verts[:, 2])
+    # s_z_len = s_z_max - s_z_min
 
     offset = np.array([
         [1, 0, 0, p_x_min - s_x_min],
@@ -217,26 +217,26 @@ def align_to_partnet(
         [0, 0, 1, p_z_min - s_z_min],
         [0, 0, 0, 0]
     ])
-    shapenet_mesh_t = transform_verts(offset, shapenet_mesh_t.vertices, shapenet_mesh_t.faces)
+    shapenet_mesh_t = transform_vertices(offset, shapenet_mesh_t.vertices, shapenet_mesh_t.faces)
     shapenet_pts = trimesh.sample.sample_surface(shapenet_mesh_t, 2000)[0]
     dist_mat = cdist(shapenet_pts, partnet_pts)
     chamfer_dist = dist_mat.min(0).mean() + dist_mat.min(1).mean()
     print(f"Chamfer Distance new t: {chamfer_dist}")
 
-    verts = shapenet_mesh_t.vertices
-    s_x_min = np.min(verts[:, 0])
-    s_x_max = np.max(verts[:, 0])
-    s_x_len = s_x_max - s_x_min
-    s_y_min = np.min(verts[:, 1])
-    s_y_max = np.max(verts[:, 1])
-    s_y_len = s_y_max - s_y_min
-    s_z_min = np.min(verts[:, 2])
-    s_z_max = np.max(verts[:, 2])
-    s_z_len = s_z_max - s_z_min
+    # verts = shapenet_mesh_t.vertices
+    # s_x_min = np.min(verts[:, 0])
+    # s_x_max = np.max(verts[:, 0])
+    # s_x_len = s_x_max - s_x_min
+    # s_y_min = np.min(verts[:, 1])
+    # s_y_max = np.max(verts[:, 1])
+    # s_y_len = s_y_max - s_y_min
+    # s_z_min = np.min(verts[:, 2])
+    # s_z_max = np.max(verts[:, 2])
+    # s_z_len = s_z_max - s_z_min
 
-    if verbose:
-        print(f"partnet measures:\n{p_x_len}, {p_y_len}, {p_z_len}; {p_z_len**2+p_y_len**2}")
-        print(f"shapenet measures:\n{s_x_len}, {s_y_len}, {s_z_len}; {s_y_len**2+s_z_len**2}")
+    # if verbose:
+    #     print(f"partnet measures:\n{p_x_len}, {p_y_len}, {p_z_len}; {p_z_len**2+p_y_len**2}")
+    #     print(f"shapenet measures:\n{s_x_len}, {s_y_len}, {s_z_len}; {s_y_len**2+s_z_len**2}")
 
     trimesh.exchange.export.export_mesh(shapenet_mesh_t, out_file, file_type='obj')
 
