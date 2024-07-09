@@ -16,6 +16,9 @@ LABLEMAP = dict(
     body=1,
     handle=2,
     containing_things=4,
+    stir_bar=4,
+    supporting_plate=4,
+    lid=4,
     other=4,
 )
 

@@ -1,4 +1,5 @@
-scipy
-trimesh
-numpy
-open3d
+trimesh==4.4.1
+scipy==1.11.4
+numpy==1.22.0
+pandas==1.5.3
+open3d==0.18.0

@@ -2,22 +2,24 @@ from detect_graspable_regions.partnet_grasp.sampling.alignment import align_to_p
 from detect_graspable_regions.partnet_grasp.sampling.constants import PARTNET_EXP_GITHUB_LINK
 from detect_graspable_regions.partnet_grasp.sampling.label_shapenet_mesh import orig_segmentation
 from detect_graspable_regions.partnet_grasp.sampling.mesh_filtering import manual_filter_mesh
-from detect_graspable_regions.partnet_grasp.sampling.partnet_annotated_mesh import PartNetAnnotatedMesh
+from detect_graspable_regions.partnet_grasp.sampling.utils import ModelHandler, PartNetDataset, ShapeNetDataset
 from detect_graspable_regions.partnet_grasp.sampling.partnet_grasp_meshes import ANNOT_DICT
 
 import json
 import urllib.request
 
+import zipfile
+
 
 def convert_partnet_labels(
-        base_partnet_path: str,
-        base_shapenet_path: str,
-        target_mesh_path: str,
+        partnet_dataset: PartNetDataset,
+        shapenet_dataset: ShapeNetDataset,
+        aligned_archive_path: str,
         target_dataset_path: str,
         obj_class: str = 'Mug',
-        manual: bool = False,
-        verbose: bool = False) -> None:
+        manual: bool = False) -> None:
     """Transfers PartNet labels to ShapeNet mesh.
+
     Involves
     a) extracting ShapeNet meshes of the given class from ShapeNet,
     b) transforming the ShapeNet mesh to match the combined PartNet transform,
@@ -25,15 +27,25 @@ def convert_partnet_labels(
      individual segment.
     d) saving vertices, faces, and vertex labels as npz files under `target_dataset_path`.
 
-    Args:
-        base_partnet_path (str): Path to `PartNet/data_vX` dir.
-        base_shapenet_path (str): Path to `ShapeNetCore.vX` dir.
-        target_mesh_path (str): Destination dir to save the aligned ShapeNet partnet_grasp to.
-        target_dataset_path (str): Destination dir to save the extracted dataset to.
-        obj_class (str, optional): Object class name. Defaults to 'Mug'.
-        manual (bool, optional): Whether to manually select meshes. Defaults to False.
-        verbose (bool, optional): Show more info. Defaults to False.
+    Parameters
+    ----------
+    partnet_dataset : str
+        Handler to the PartNet data set.
+    shapenet_dataset : str
+        Handler to the ShapeNet data set.
+    aligned_archive_path : str
+        Destination archive to save the aligned ShapeNet in.
+    target_dataset_path : str
+        Destination dir to save the extracted dataset to.
+    obj_class : str, optional
+        Object class name, by default 'Mug'
+    manual : bool, optional
+        Whether to manually select meshes. Defaults to False.
     """
+
+    # Truncate existing target file and start new
+    target_zip = zipfile.ZipFile(aligned_archive_path, 'w', zipfile.ZIP_DEFLATED)
+
 
     # Load annotation data from official PartNet-repository
     data = []
@@ -44,31 +56,22 @@ def convert_partnet_labels(
 
     for inst in data:
         # Create annotation object
-        annot = PartNetAnnotatedMesh(
+        model = ModelHandler(
             anno_id=inst['anno_id'],
-            base_partnet_path=base_partnet_path,
-            base_shapenet_path=base_shapenet_path
+            partnet_dataset=partnet_dataset,
+            shapenet_dataset=shapenet_dataset
         )
 
         # Align PartNet-segment-meshes to corresponding ShapeNet-mesh
         align_to_partnet(
-            base_partnet_path=base_partnet_path,
-            base_shapenet_path=base_shapenet_path,
-            aligned_shapenet_target_path=target_mesh_path,
-            anno_id=annot.anno_id,
-            cat_name=annot.meta['model_cat'].lower(),
-            model_id=annot.meta['model_id'],
-            verbose=verbose
+            aligned_archive=target_zip,
+            model=model,
         )
 
         # Select or dismiss aligned mesh (manually or according to 'ANNOT_DICT')
         if manual:
             use_mesh = manual_filter_mesh(
-                base_partnet_path=base_partnet_path,
-                aligned_shapenet_path=target_mesh_path,
-                anno_id=annot.meta['anno_id'],
-                cat_name=annot.meta['model_cat'].lower(),
-                model_id=annot.meta['model_id']
+                model=model,
             )
         else:
             use_mesh = ANNOT_DICT[inst['anno_id']]
@@ -76,10 +79,8 @@ def convert_partnet_labels(
         # Save labeled ShapeNet-mesh
         if use_mesh:
             orig_segmentation(
-                base_partnet_path=base_partnet_path,
-                aligned_shapenet_path=target_mesh_path,
-                annot=annot,
+                model=model,
+                aligned_archive=target_zip,
                 out_npz_dir=target_dataset_path,
-                verbose=verbose,
                 manual=manual
             )
