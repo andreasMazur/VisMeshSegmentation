@@ -11,13 +11,12 @@ import urllib.request
 import zipfile
 
 
-def convert_partnet_labels(
-        partnet_dataset: PartNetDataset,
-        shapenet_dataset: ShapeNetDataset,
-        aligned_archive_path: str,
-        target_dataset_path: str,
-        obj_class: str = 'Mug',
-        manual: bool = False) -> None:
+def convert_partnet_labels(partnet_dataset: PartNetDataset,
+                           shapenet_dataset: ShapeNetDataset,
+                           aligned_archive_path: str,
+                           target_dataset_path: str,
+                           obj_class: str = 'Mug',
+                           manual: bool = False) -> None:
     """Transfers PartNet labels to ShapeNet mesh.
 
     Involves
