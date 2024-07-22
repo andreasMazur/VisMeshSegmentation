@@ -12,12 +12,10 @@ import zipfile
 import pathlib
 
 
-def orig_segmentation(
-            aligned_archive: zipfile.ZipFile,
-            model: ModelHandler,
-            out_npz_dir: pathlib.Path | str,
-            manual: bool = False
-        ) -> None:
+def orig_segmentation(aligned_archive: zipfile.ZipFile,
+                      model: ModelHandler,
+                      out_npz_dir: pathlib.Path | str,
+                      manual: bool = False) -> None:
     """Computes aligned ShapeNet labels from signed distance to PartNet segments.
 
     Parameters
