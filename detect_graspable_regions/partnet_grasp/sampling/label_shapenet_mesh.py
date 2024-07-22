@@ -29,7 +29,8 @@ def orig_segmentation(
     out_npz_dir : pathlib.Path | str
         Directory where to save a numpy file containing vertices, faces, and segment labels.
     manual : bool, optional
-        If True, the user is prompted for each mesh to decide whether it should be included in the output dataset. If False, the same selection of the paper is used. By default False
+        If True, the user is prompted for each mesh to decide whether it should be included in the output dataset.
+        If False, the same selection of the paper is used. By default False.
 
     Raises
     ------
