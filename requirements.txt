@@ -3,3 +3,10 @@ scipy==1.11.4
 numpy==1.22.0
 pandas==1.5.3
 open3d==0.18.0
+torch_geometric
+torch_cluster
+fpsample
+matplotlib
+scipy
+pandas
+geoconv
