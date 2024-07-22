@@ -114,11 +114,9 @@ def transform_vertices(trans: np.ndarray,
     return out_mesh
 
 
-def align_to_partnet(
-        model: ModelHandler,
-        aligned_archive: zipfile.ZipFile = None,
-        show_meshes: bool = False
-    ) -> None:
+def align_to_partnet(model: ModelHandler,
+                     aligned_archive: zipfile.ZipFile = None,
+                     show_meshes: bool = False) -> None:
     """Saves a ShapeNet mesh that was heuristically aligned to the corresponding PartNet mesh for further processing.
 
     Parameters
