@@ -1,6 +1,6 @@
-from geoconv_examples.detect_graspable_regions.partnet_grasp.dataset import PartNetGraspDataset
-from geoconv_examples.detect_graspable_regions.data_correction.convert_partnet import convert_partnet
-from geoconv_examples.detect_graspable_regions.training.train_imcnn import train_single_imcnn
+from detect_graspable_regions.partnet_grasp.dataset import PartNetGraspDataset
+from detect_graspable_regions.data_correction.convert_partnet import convert_partnet
+from detect_graspable_regions.training.train_imcnn import train_single_imcnn
 
 from pathlib import Path
 

@@ -2,17 +2,14 @@ from detect_graspable_regions.partnet_grasp.sampling.constants import CAT2SYNSET
 
 from scipy.spatial.distance import cdist
 from io import BytesIO
+from typing import Generator
 
 import numpy as np
 import trimesh
-
 import pathlib
-
 import json
-
-from typing import Generator
-
 import zipfile
+
 
 def get_chamfer_dist(m1 : trimesh.Trimesh, m2 : trimesh.Trimesh, samples=2000) -> float:
     """Computes Chamfer distance between two meshes.

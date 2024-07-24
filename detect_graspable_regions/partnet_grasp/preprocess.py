@@ -1,6 +1,7 @@
 from geoconv.preprocessing.barycentric_coordinates import compute_barycentric_coordinates
 from geoconv.preprocessing.gpc_system_group import GPCSystemGroup
 from geoconv.utils.misc import normalize_mesh, find_largest_one_hop_dist, get_faces_of_edge
+
 from detect_graspable_regions.partnet_grasp.geodesic_diameters import GEODESIC_DIAMETERS
 from detect_graspable_regions.partnet_grasp.dataset import raw_partnet_grasp_generator
 

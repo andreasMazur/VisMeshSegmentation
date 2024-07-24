@@ -1,5 +1,5 @@
-from geoconv_examples.detect_graspable_regions.deepview.deepview import DeepViewSubClass
-from geoconv_examples.detect_graspable_regions.deepview.user_interaction import interactive_seg_correction
+from detect_graspable_regions.deepview.deepview import DeepViewSubClass
+from detect_graspable_regions.deepview.user_interaction import interactive_seg_correction
 
 import numpy as np
 
