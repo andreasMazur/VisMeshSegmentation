@@ -7,7 +7,6 @@ from detect_graspable_regions.partnet_grasp.sampling.partnet_grasp_meshes import
 
 import json
 import urllib.request
-
 import zipfile
 
 

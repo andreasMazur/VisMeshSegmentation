@@ -1,8 +1,8 @@
-from geoconv_examples.detect_graspable_regions.deepview.correction_pipeline import correction_pipeline
-from geoconv_examples.detect_graspable_regions.partnet_grasp.dataset import (
+from detect_graspable_regions.deepview.correction_pipeline import correction_pipeline
+from detect_graspable_regions.partnet_grasp.dataset import (
     PartNetGraspDataset, processed_partnet_grasp_generator
 )
-from geoconv_examples.detect_graspable_regions.training.imcnn import SegImcnn
+from detect_graspable_regions.training.imcnn import SegImcnn
 
 import torch
 import scipy as sp

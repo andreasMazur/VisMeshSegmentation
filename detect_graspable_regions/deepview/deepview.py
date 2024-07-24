@@ -1,4 +1,4 @@
-from geoconv_examples.detect_graspable_regions.deepview.select_collection import SelectFromCollection
+from detect_graspable_regions.deepview.select_collection import SelectFromCollection
 
 from deepview.DeepView import DeepView
 
