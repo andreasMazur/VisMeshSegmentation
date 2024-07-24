@@ -5,7 +5,12 @@
 In order to run this example, further dependencies need to be installed:
 
 ```bash
-pip install torch_geometric torch_cluster fpsample matplotlib scipy pandas
+pip install -r requirements.txt
+cd PATH/TO/geoconv
+pip install .
+pip install cython==0.29.37
+pip install pyshot@git+https://github.com/uhlmanngroup/pyshot@master
+pip install torch
 pip install deepview@git+https://github.com/LucaHermes/DeepView@master
 ```
 
