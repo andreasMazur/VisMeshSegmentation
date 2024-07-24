@@ -78,11 +78,12 @@ if __name__ == '__main__':
     )
 ```
 
-Subsequently, define the path to another directory:
+Subsequently, define the path to the directory where we can store preprocessing results for the subsequent training of 
+IMCNNs:
 ```python
 PARTNET_GRASP_DS_PATH = "PATH/TO/partnet_grasp"
 ```
-We use that directory to store preprocessed shapes for the subsequent training of IMCNNs.
+
 The preprocess is started by running:
 ```python
 from detect_graspable_regions.partnet_grasp.preprocess import preprocess_data
