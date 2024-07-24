@@ -18,12 +18,12 @@ PARTNET_SPLITS = {
 
 def raw_partnet_grasp_generator(path, return_file_name=False, file_boundaries=None):
     """Loads raw PartNet-Grasp partnet_grasp."""
-    directory = os.listdir(f"{path}/out_data")
+    directory = os.listdir(path)
     directory.sort()
     if file_boundaries is not None:
         directory = directory[file_boundaries[0]:file_boundaries[1]]
     for file_name in directory:
-        d = np.load(f'{path}/out_data/{file_name}')
+        d = np.load(f"{path}/{file_name}")
         if return_file_name:
             yield trimesh.Trimesh(vertices=d["verts"], faces=d["faces"], validate=True), d["labels"], file_name
         else:
