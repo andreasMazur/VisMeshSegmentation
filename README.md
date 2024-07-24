@@ -40,36 +40,62 @@ if __name__ == "__main__":
     datasets.load_dataset("ShapeNet/PartNet-archive")
 ```
 
+The PartNet dataset requires an extra installation step as it comes as a split dataset.
+Head to the download folder that contains the `data_v0_chunk.z*`-files and execute the following command to combine the splitted dataset into one zip-file:
+
+```bash
+zip -s 0 data_v0_chunk.z* --out PartNetData.zip
+```
+
+Remember your paths to the folder which contain the downloaded datasets:
+```python
+SHAPENET_DS_PATH = "PATH/TO/ShapeNetCore.v2"  # Folder that contains the synset zip-files
+PARTNET_DS_PATH = "PATH/TO/PartNet-archive"  # Folder that contains 'PartNetData.zip'
+```
+
 ## Sampling and preprocessing PartNet-Grasp
 
-To begin with, the '*Mug*'-class of the PartNet dataset needs to be sampled, aligned and preprocessed for IMCNNs:
+Now we want to sample, align and preprocess PartNet-Grasp.
 
+Define the path for where the sampled and aligned shapes of PartNet-grasp shall be stored:
 ```python
-from geoconv_examples.detect_graspable_regions.partnet_grasp.sampling.partnet_align_shapenet import (
-    convert_partnet_labels
-)
-from geoconv_examples.detect_graspable_regions.partnet_grasp.preprocess import preprocess_data
+SAMPLED_PARTNET = "PATH/TO/SampledPartNet"
+```
+
+Sample and align the *'Mug'*-class of PartNet by executing the following script:
+```python
+from detect_graspable_regions.partnet_grasp.sampling.convert_partnet_labels import convert_partnet_labels
+from detect_graspable_regions.partnet_grasp.sampling.utils import PartNetDataset, ShapeNetDataset
 
 if __name__ == '__main__':
-    # Sample and align PartNet data to ShapeNet data
-    path_to_out_data = "/PATH_TO/out_data"
     convert_partnet_labels(
-        base_partnet_path="/PATH_TO/PartNet/data_v0",
-        base_shapenet_path="/PATH_TO/ShapeNet/ShapeNetCore.v2",
-        target_mesh_path="/tmp/AlignedShapeNet",
-        target_dataset_path=path_to_out_data,
+        partnet_dataset=PartNetDataset(PARTNET_DS_PATH),
+        shapenet_dataset=ShapeNetDataset(SHAPENET_DS_PATH),
+        aligned_archive_path="PATH/TO/AlignedShapeNet",
+        target_dataset_path=SAMPLED_PARTNET,
+        obj_class="Mug",
         manual=False
     )
-    # Preprocess for IMCNNs
+```
+
+Subsequently, define the path to another directory:
+```python
+PARTNET_GRASP_DS_PATH = "PATH/TO/partnet_grasp"
+```
+We use that directory to store preprocessed shapes for the subsequent training of IMCNNs.
+The preprocess is started by running:
+```python
+from detect_graspable_regions.partnet_grasp.preprocess import preprocess_data
+
+if __name__ == '__main__':
     preprocess_data(
-        data_path="/".join(path_to_out_data.split("/")[:-1]),  # Dir. where "out_data" is stored
-        target_dir="/PATH_TO/partnet_grasp",  # will become a ZIP-file, i.e. 'partnet_grasp.zip'
+        data_path=SAMPLED_PARTNET,
+        target_dir=PARTNET_GRASP_DS_PATH,  # will become a ZIP-file, i.e. 'partnet_grasp.zip'
         processes=10,  # Adjust to how many CPU-cores you wish to use for preprocess
-        n_radial=5, 
+        n_radial=5,
         n_angular=8
     )
 ```
-We refer to that sub-dataset as '*PartNet-Grasp*'.
 
 ## Correcting Segmentation Labels
 
