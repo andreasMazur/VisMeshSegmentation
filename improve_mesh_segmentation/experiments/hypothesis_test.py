@@ -27,7 +27,7 @@ def run_hypothesis_test(old_dataset_path,
     logging_dir: str
         The path to the logging directory
     trials: int
-        The amount of trials (i.e. training to train)
+        The amount of trials (i.e. amount of training runs for each corrected and uncorrected sub-experiment)
     epochs: int
         The amount of epochs per trial
     """
