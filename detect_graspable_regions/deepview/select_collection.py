@@ -31,6 +31,17 @@ class SelectFromCollection:
     """
 
     def __init__(self, ax, collection, alpha_other=0.3):
+        """TODO
+
+        Parameters
+        ----------
+        ax:
+            TODO
+        collection:
+            TODO
+        alpha_other: float
+            TODO
+        """
         self.canvas = ax.figure.canvas
         self.collection = collection
         self.alpha_other = alpha_other
@@ -40,10 +51,18 @@ class SelectFromCollection:
         self.ind = []
 
     def onselect(self, verts):
+        """TODO
+
+        Parameters
+        ----------
+        verts: np.ndarray
+            TODO
+        """
         path = Path(verts)
         self.ind = np.nonzero(path.contains_points(self.xys))[0]
         return self.ind
 
     def disconnect(self):
+        """TODO"""
         self.lasso.disconnect_events()
         self.canvas.draw_idle()
