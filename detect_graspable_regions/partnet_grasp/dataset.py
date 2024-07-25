@@ -17,7 +17,17 @@ PARTNET_SPLITS = {
 
 
 def raw_partnet_grasp_generator(path, return_file_name=False, file_boundaries=None):
-    """Loads raw PartNet-Grasp partnet_grasp."""
+    """Loads raw PartNet-Grasp.
+
+    Parameters
+    ----------
+    path: str
+        The path to the aligned ShapeNet meshes. (result dataset of 'convert_partnet_labels'-function)
+    return_file_name: bool
+        Whether to return the filename additionally to the mesh.
+    file_boundaries: tuple
+        Slices to the directory list.
+    """
     directory = os.listdir(path)
     directory.sort()
     if file_boundaries is not None:
@@ -31,7 +41,25 @@ def raw_partnet_grasp_generator(path, return_file_name=False, file_boundaries=No
 
 
 def processed_partnet_grasp_generator(path_to_zip, set_type=0, only_signal=False, set_indices=None, device=None):
-    """Loads preprocessed PartNet-Grasp partnet_grasp."""
+    """Loads preprocessed PartNet-Grasp.
+
+    Parameters
+    ----------
+    path_to_zip: str
+        The path to the dataset zip-file.
+    set_type: int
+        The set type. Can be an integer from [0, 1, 2, 3]. Each index returns a separate dataset split:
+            0: train meshes
+            1: validation meshes
+            2: test meshes
+            3: all meshes
+    only_signal: bool
+        Whether to only return the signal defined on the shape.
+    set_indices: np.ndarray
+        The indices of the meshes that shall be returned.
+    device: torch.cuda.device
+        Onto which device the data shall be loaded.
+    """
     return faust_generator(
         path_to_zip,
         set_type=set_type,
@@ -43,6 +71,7 @@ def processed_partnet_grasp_generator(path_to_zip, set_type=0, only_signal=False
 
 
 class PartNetGraspDataset(IterableDataset):
+    """A Pytorch-wrapper class for the PartNet-Grasp dataset."""
     def __init__(self, path_to_zip, set_type=0, only_signal=False, set_indices=None, device=None):
         self.only_signal = only_signal
         self.path_to_zip = path_to_zip
@@ -63,6 +92,7 @@ class PartNetGraspDataset(IterableDataset):
         return self.dataset
 
     def reset(self):
+        """Loads a new generator with the same configuration as the initial generator."""
         self.dataset = processed_partnet_grasp_generator(
             self.path_to_zip,
             set_type=self.set_type,

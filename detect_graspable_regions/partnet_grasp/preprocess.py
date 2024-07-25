@@ -15,6 +15,25 @@ import json
 
 
 def preprocess_data(data_path, target_dir, temp_dir=None, processes=1, n_radial=5, n_angular=8, file_boundaries=None):
+    """Preprocesses the aligned ShapeNet-meshes into a format that can be used to train IMCNNs.
+
+    Parameters
+    ----------
+    data_path: str
+        The path where the aligned ShapeNet-meshes are stored.
+    target_dir: str
+        The path to where to store the preprocessing results.
+    temp_dir: str
+        A temporary directory where intermediate preprocessing results can be stored.
+    processes: int
+        The amount of concurrent processes to use in order to calculate local GPC-systems.
+    n_radial: int
+        The amount of radial coordinates of the template, that will be placed into the GPC-systems.
+    n_angular: int
+        The amount of angular coordinates of the template, that will be placed into the GPC-systems.
+    file_boundaries: tuple
+        Slices to the directory list of the aligned ShapeNet-meshes.
+    """
     if temp_dir is None:
         temp_dir = "./temp_meshes"
 
