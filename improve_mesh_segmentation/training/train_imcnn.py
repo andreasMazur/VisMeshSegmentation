@@ -1,6 +1,6 @@
-from geoconv_examples.detect_graspable_regions.partnet_grasp.dataset import PartNetGraspDataset
-from geoconv_examples.detect_graspable_regions.training.imcnn import SegImcnn
-from geoconv_examples.detect_graspable_regions.training.train_logging import log_training
+from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset
+from improve_mesh_segmentation.training.imcnn import SegImcnn
+from improve_mesh_segmentation.training.train_logging import log_training
 
 from torch import nn
 
