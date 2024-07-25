@@ -92,6 +92,9 @@ def convert_dataset_deepview(csv_path,
 
 def convert_partnet(old_data_path, new_data_path, csv_path, label_changes_path=None):
     """Integrates label corrections into the old dataset, thereby creating a new one."""
+    if label_changes_path is not None:
+        os.makedirs(label_changes_path, exist_ok=True)
+
     # Integrate DeepView-corrected labels into the dataset
     old_data_path = f"{old_data_path}.zip"
     if not Path(new_data_path).is_file():
