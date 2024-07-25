@@ -9,12 +9,28 @@ import scipy as sp
 
 
 def pred_wrapper(data, model):
-    """Get the predicted probabilities of an IMCNN."""
+    """Get the predicted probabilities of an IMCNN.
+
+    Parameters
+    ----------
+    data: torch.Tensor
+        The data which shall be embedded.
+    model:
+        The model that embeds the data.
+    """
     return sp.special.softmax(model.model.output_dense(torch.tensor(data).float()).detach().numpy(), axis=-1)
 
 
 def embed(imcnn, inputs):
-    """Retrieves the output of the last ISC-layer of an IMCNN."""
+    """Retrieves the output of the last ISC-layer of an IMCNN.
+
+    Parameters
+    ----------
+    imcnn: SegImcnn
+        A segmentation IMCNN.
+    inputs:
+        The data which shall be embedded.
+    """
     #################
     # Handling Input
     #################
@@ -39,7 +55,16 @@ def embed(imcnn, inputs):
 
 
 def correct_sub_partnet(data_path, model_path, correction_csv_path=None):
-    """Runs DeepView correction with the given IMCNN."""
+    """Runs DeepView correction with the given IMCNN.
+
+    data_path: str
+        The path to where the (uncorrected) dataset is stored.
+    model_path: str
+        The path to where the trained segmentation model is stored. The model should be trained on the dataset that
+        is referred to by 'data_path'.
+    correction_csv_path: str
+        The path to where to store the correction suggestions.
+    """
     if correction_csv_path is None:
         correction_csv_path = "./partnet_correction.csv"
 
