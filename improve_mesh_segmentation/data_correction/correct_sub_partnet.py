@@ -1,7 +1,5 @@
 from improve_mesh_segmentation.deepview.correction_pipeline import correction_pipeline
-from improve_mesh_segmentation.partnet_grasp.dataset import (
-    PartNetGraspDataset, processed_partnet_grasp_generator
-)
+from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset, processed_partnet_grasp_generator
 from improve_mesh_segmentation.training.imcnn import SegImcnn
 
 import torch

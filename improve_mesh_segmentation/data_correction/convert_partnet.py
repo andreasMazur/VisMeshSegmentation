@@ -1,4 +1,4 @@
-from geoconv_examples.detect_graspable_regions.partnet_grasp.dataset import processed_partnet_grasp_generator
+from improve_mesh_segmentation.partnet_grasp.dataset import processed_partnet_grasp_generator
 
 from pathlib import Path
 
