@@ -17,7 +17,32 @@ def train_single_imcnn(data_path,
                        skip_validation=False,
                        skip_testing=False,
                        verbose=False):
-    """Trains a single Intrinsic Mesh CNN on a subset of the PartNet dataset."""
+    """Trains a single Intrinsic Mesh CNN on a subset of the PartNet dataset.
+
+    Parameters
+    ----------
+    data_path: str
+        The path to the preprocessed PartNet dataset zip-file.
+    n_epochs: int
+        The amount of epochs for which the model shall be trained for.
+    logging_dir: str
+        The logging directory for the training.
+    adapt_data: PartNetGraspDataset
+        The adaption data for the segmentation IMCNN. Used by the input normalization layer to normalize the mesh
+        signals.
+    train_data: PartNetGraspDataset
+        The training data.
+    val_data: PartNetGraspDataset
+        The validation data.
+    test_data: PartNetGraspDataset
+        The testing data.
+    skip_validation: bool
+        Whether to skip model validation.
+    skip_testing: bool
+        Whether to skip model testing.
+    verbose: bool
+        Whether to print intermediate training information to the console.
+    """
     model = SegImcnn(
         adapt_data=PartNetGraspDataset(data_path, set_type=0, only_signal=True) if adapt_data is None else adapt_data
     )
@@ -74,7 +99,21 @@ def train_single_imcnn(data_path,
 
 
 def train_n_imcnns(n, data_path, n_epochs, logging_dir=None, verbose=False):
-    """Train n IMCNNs."""
+    """Train 'n' IMCNNs on PartNet-Grasp.
+
+    Parameters
+    ----------
+    n: int
+        The amount of IMCNNs to train.
+    data_path: str
+        The path to the preprocessed PartNet dataset zip-file.
+    n_epochs: int
+        The amount of epochs for which the model shall be trained for.
+    logging_dir: str
+        The logging directory for the training.
+    verbose: bool
+        Whether to print intermediate training information to the console.
+    """
     training_histories = []
     for repetition in range(n):
         print(f"### Repetition {repetition} ###")

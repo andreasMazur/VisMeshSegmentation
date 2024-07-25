@@ -6,7 +6,23 @@ import torch
 
 
 def log_training(model, hist, logging_dir, skip_validation, skip_testing, verbose=True):
-    """Saves model, training history and plots training statistics."""
+    """Saves model, training history and plots training statistics.
+
+    Parameters
+    ----------
+    model: SegImcnn
+        The IMCNN that is trained.
+    hist: dict
+        A dictionary that contains training history.
+    logging_dir: str
+        The logging directory for the training.
+    skip_validation: bool
+        Whether to skip model validation.
+    skip_testing: bool
+        Whether to skip model testing.
+    verbose: bool
+        Whether to print intermediate training information to the console.
+    """
     if not os.path.exists(logging_dir):
         os.makedirs(logging_dir)
 
