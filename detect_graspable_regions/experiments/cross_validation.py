@@ -13,7 +13,24 @@ DATASET_LENGTH = 100
 
 
 def partnet_grasp_cross_validation(k, epochs, zip_file, logging_dir, label_changes_path, trained_models=None):
-    """Perform cross-validation on PartNet-Grasp and store change, entropy and mis-predictions in a CSV file."""
+    """Perform cross-validation on PartNet-Grasp and store change, entropy and mis-predictions in a CSV file.
+
+    Parameters
+    ----------
+    k: int
+        How many folds shall be considered during cross-validation.
+    epochs: int
+        How many epochs each training run should conduct.
+    zip_file: str
+        The path to the dataset.
+    logging_dir: str
+        The path to the logging directory.
+    label_changes_path: str
+        The path to where effective changes shall be stored. Effective changes are changes that actually change the
+        label of a vertex.
+    trained_models: str
+        A path to where trained models are stored. These can be loaded to skip already performed training runs.
+    """
     # Create logging dir
     if not os.path.exists(logging_dir):
         os.makedirs(logging_dir)
@@ -79,7 +96,13 @@ def partnet_grasp_cross_validation(k, epochs, zip_file, logging_dir, label_chang
 
 
 def filter_method(logging_dir):
-    """Comparison method."""
+    """Comparison method.
+
+    Parameters
+    ----------
+    logging_dir: str
+        The path to the logging directory.
+    """
     data_indices = np.arange(DATASET_LENGTH)
     selected_misclassifications = np.zeros(len(data_indices))
     recall = np.zeros(len(data_indices))
