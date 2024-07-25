@@ -11,7 +11,7 @@ pip install .
 pip install numpy==1.22.0
 pip install cython==0.29.37
 pip install pyshot@git+https://github.com/uhlmanngroup/pyshot@master
-pip install torch
+pip install torch torcheval
 pip install deepview@git+https://github.com/LucaHermes/DeepView@master
 ```
 
@@ -101,13 +101,16 @@ if __name__ == '__main__':
 
 ## Correcting Segmentation Labels
 
-Next, the user needs to run the segmentation label correction algorithm to interactively
+Next, run the segmentation label correction algorithm to interactively
 correct segmentation labels of PartNet-Grasp:
 
 ```python
-from geoconv_examples.detect_graspable_regions.data_correction.correct_sub_partnet import correct_sub_partnet
+from detect_graspable_regions.data_correction.correct_sub_partnet import correct_sub_partnet
+
+import matplotlib
 
 if __name__ == "__main__":
+    matplotlib.use("Qt5Agg")
     correct_sub_partnet(
         data_path="/PATH_TO/partnet_grasp.zip",
         model_path="/PATH_TO/saved_imcnn.zip",
@@ -119,7 +122,7 @@ After correcting the labels the user needs to incorporate the changes into the o
 preprocessed dataset:
 
 ```python
-from geoconv_examples.detect_graspable_regions.data_correction.convert_partnet import convert_partnet
+from detect_graspable_regions.data_correction.convert_partnet import convert_partnet
 
 if __name__ == "__main__":
     convert_partnet(
@@ -136,7 +139,7 @@ Run the hypothesis test. If proposed label corrections are not already incorpora
 this function will do it. Otherwise, corrected data will be loaded if path is set correctly.
 
 ```python
-from geoconv_examples.detect_graspable_regions.experiments.hypothesis_test import run_hypothesis_test
+from detect_graspable_regions.experiments.hypothesis_test import run_hypothesis_test
 
 if __name__ == "__main__":
     run_hypothesis_test(
@@ -152,7 +155,7 @@ if __name__ == "__main__":
 ## Comparison to Filter Method
 
 ```python
-from geoconv_examples.detect_graspable_regions.experiments.cross_validation import (
+from detect_graspable_regions.experiments.cross_validation import (
     partnet_grasp_cross_validation, filter_method
 )
 
