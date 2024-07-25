@@ -15,7 +15,7 @@ def pred_wrapper(data, model):
     ----------
     data: torch.Tensor
         The data which shall be embedded.
-    model:
+    model: SegImcnn
         The model that embeds the data.
     """
     return sp.special.softmax(model.model.output_dense(torch.tensor(data).float()).detach().numpy(), axis=-1)
@@ -28,7 +28,7 @@ def embed(imcnn, inputs):
     ----------
     imcnn: SegImcnn
         A segmentation IMCNN.
-    inputs:
+    inputs: torch.Tensor
         The data which shall be embedded.
     """
     #################
