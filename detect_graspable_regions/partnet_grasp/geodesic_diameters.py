@@ -1,7 +1,5 @@
 import numpy as np
 
-
-# i-th entry equals geodesic diameter of i-th mesh in the FAUST dataset
 GEODESIC_DIAMETERS = np.array([
     [3.4534198902997453, 8684],
     [2.8159973158453937, 8776],
