@@ -119,6 +119,11 @@ class DeepViewSubClass(DeepView):
         embedded or synthesised sample at the click location and
         passes it to the data_viz method, together with the prediction,
         if present a groun truth label and the 2D click location.
+
+        Parameters
+        ----------
+        event:
+            TODO
         """
         # when there is an artist attribute, a
         # concrete sample was clicked, otherwise
