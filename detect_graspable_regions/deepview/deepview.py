@@ -114,13 +114,12 @@ class DeepViewSubClass(DeepView):
         self.ax.legend()
 
     def show_sample(self, event):
-        '''
+        """
         Invoked when the user clicks on the plot. Determines the
         embedded or synthesised sample at the click location and
         passes it to the data_viz method, together with the prediction,
         if present a groun truth label and the 2D click location.
-        '''
-
+        """
         # when there is an artist attribute, a
         # concrete sample was clicked, otherwise
         # show the according synthesised image

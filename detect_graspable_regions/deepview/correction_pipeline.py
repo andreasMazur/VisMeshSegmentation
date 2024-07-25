@@ -44,7 +44,7 @@ def deep_view_iter(model,
     idx: int
         The mesh index.
     amount_classes: int
-        The total amount of available classes
+        The total amount of available classes.
     classes: np.ndarray
         All class labels in an array.
     embedding_shape: tuple

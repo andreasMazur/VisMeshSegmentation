@@ -11,7 +11,29 @@ def interactive_seg_correction(shape_idx,
                                class_dict,
                                amount_classes=10,
                                file_name="corrected_labels.csv"):
-    """Interactively correct the segmentation label."""
+    """Interactively correct the segmentation label.
+
+    Parameters
+    ----------
+    shape_idx: int
+        The mesh index.
+    coordinates: np.ndarray
+        The 3D-coordinates of the mesh vertices.
+    all_segments: list
+        The list of labels, where each integer refers to one segment.
+    ground_truth: np.ndarray
+        The original ground truth labels for the mesh vertices.
+    query_indices: np.ndarray
+        The indices of the selected vertices.
+    cmap: Callable
+        A colormap.
+    class_dict: dict
+        A dictionary that maps class labels (integers) to their class names (strings).
+    amount_classes: int
+        The total amount of available classes.
+    file_name: str
+        The filename of the CSV-file where to store correction data.
+    """
     ##########
     # 3D Plot
     ##########
