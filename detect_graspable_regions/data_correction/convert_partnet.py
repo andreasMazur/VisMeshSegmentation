@@ -13,7 +13,23 @@ LOADING_CHARS = ["|", "/", "-", "\\"]
 
 
 def save_mesh_file(idx, signal, bc, gt, coord, new_dataset_path):
-    """Saves a mesh partnet_grasp to a given folder."""
+    """Saves a mesh partnet_grasp to a given folder.
+
+    Parameters
+    ----------
+    idx: int
+        The mesh index.
+    signal: np.ndarray
+        The signal defined on the shape.
+    bc: np.ndarray
+        The barycentric coordinates for the shape.
+    gt: np.ndarray
+        The corrected ground truth labels for the mesh vertices.
+    coord: np.ndarray
+        The 3D-coordinates of the mesh vertices.
+    new_dataset_path: str
+        Path to where to store the corrected dataset.
+    """
     file_number = "".join(["0" for _ in range(3 - len(idx))] + [idx])
     np.save(f"{new_dataset_path}/SIGNAL_tr_reg_{file_number}.npy", signal)
     np.save(f"{new_dataset_path}/BC_tr_reg_{file_number}.npy", bc)
@@ -29,7 +45,28 @@ def induce_label_correction(csv_array,
                             mesh_gt,
                             new_dataset_path,
                             label_changes_path=None):
-    """Converts original ground truth to corrected deep-view ground truth."""
+    """Converts original ground truth to corrected deep-view ground truth.
+
+    Parameters
+    ----------
+    csv_array: np.ndarray
+        The loaded csv-file that contains the changes from the interactive correction process.
+    mesh_idx: int
+        The mesh index.
+    mesh_signal: torch.Tensor
+        The signal defined on the shape.
+    mesh_bc: torch.Tensor
+        The barycentric coordinates for the shape.
+    mesh_coordinates: torch.Tensor
+        The 3D-coordinates of the mesh vertices.
+    mesh_gt: torch.Tensor
+        The original ground truth labels for the mesh vertices.
+    new_dataset_path: str
+        Path to where to store the corrected dataset.
+    label_changes_path: str
+        Path to where effective changes shall be stored. Effective changes are changes that actually change the
+        label of a vertex.
+    """
     # Convert to numpy arrays
     signal, bc, coord, gt = np.array(mesh_signal), np.array(mesh_bc), np.array(mesh_coordinates), np.array(mesh_gt)
 
@@ -63,7 +100,22 @@ def convert_dataset_deepview(csv_path,
                              new_dataset_path,
                              label_changes_path=None,
                              signals_are_coordinates=False):
-    """Incorporates proposed changes obtained with DeepView into the shape segmentation dataset."""
+    """Incorporates proposed changes obtained with DeepView into the shape segmentation dataset.
+
+    Parameters
+    ----------
+    csv_path : str
+        Path to CSV-file that contains corrections.
+    old_dataset: generator
+        Generator for the (uncorrected) Partnet-grasp dataset.
+    new_dataset_path: str
+        Path to where to store the corrected dataset.
+    label_changes_path: str
+        Path to where effective changes shall be stored. Effective changes are changes that actually change the
+        label of a vertex.
+    signals_are_coordinates: bool
+        Whether the signals returned by 'old_dataset' are 3D-coordinates.
+    """
     if not os.path.exists(new_dataset_path):
         os.makedirs(new_dataset_path)
 
@@ -91,14 +143,27 @@ def convert_dataset_deepview(csv_path,
 
 
 def convert_partnet(old_data_path, new_data_path, csv_path, label_changes_path=None):
-    """Integrates label corrections into the old dataset, thereby creating a new one."""
+    """Integrates label corrections into the old dataset, thereby creating a new one.
+
+    Parameters
+    ----------
+    old_data_path: str
+        Path to the uncorrected dataset.
+    new_data_path: str
+        Path to where to store the corrected dataset.
+    csv_path: str
+        Path to CSV-file that contains corrections.
+    label_changes_path: str
+        Path to where effective changes shall be stored. Effective changes are changes that actually change the
+        label of a vertex.
+    """
     if label_changes_path is not None:
         os.makedirs(label_changes_path, exist_ok=True)
 
     # Integrate DeepView-corrected labels into the dataset
     old_data_path = f"{old_data_path}.zip"
     if not Path(new_data_path).is_file():
-        old_dataset = processed_partnet_grasp_generator(path_to_zip=old_data_path, set_type=3, )
+        old_dataset = processed_partnet_grasp_generator(path_to_zip=old_data_path, set_type=3)
         convert_dataset_deepview(
             csv_path=csv_path,
             old_dataset=old_dataset,
