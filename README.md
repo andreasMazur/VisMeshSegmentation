@@ -64,9 +64,10 @@ SAMPLED_PARTNET = "PATH/TO/SampledPartNet"
 ```
 
 Sample and align the *'Mug'*-class of PartNet by executing the following script:
+
 ```python
-from detect_graspable_regions.partnet_grasp.sampling.convert_partnet_labels import convert_partnet_labels
-from detect_graspable_regions.partnet_grasp.sampling.utils import PartNetDataset, ShapeNetDataset
+from improve_mesh_segmentation.partnet_grasp.sampling.convert_partnet_labels import convert_partnet_labels
+from improve_mesh_segmentation.partnet_grasp.sampling.utils import PartNetDataset, ShapeNetDataset
 
 if __name__ == '__main__':
     convert_partnet_labels(
@@ -86,8 +87,9 @@ PARTNET_GRASP_DS_PATH = "PATH/TO/partnet_grasp"
 ```
 
 The preprocess is started by running:
+
 ```python
-from detect_graspable_regions.partnet_grasp.preprocess import preprocess_data
+from improve_mesh_segmentation.partnet_grasp.preprocess import preprocess_data
 
 if __name__ == '__main__':
     preprocess_data(
@@ -105,7 +107,7 @@ Next, run the segmentation label correction algorithm to interactively
 correct segmentation labels of PartNet-Grasp:
 
 ```python
-from detect_graspable_regions.data_correction.correct_sub_partnet import correct_sub_partnet
+from improve_mesh_segmentation.data_correction.correct_sub_partnet import correct_sub_partnet
 
 import matplotlib
 
@@ -122,7 +124,7 @@ After correcting the labels the user needs to incorporate the changes into the o
 preprocessed dataset:
 
 ```python
-from detect_graspable_regions.data_correction.convert_partnet import convert_partnet
+from improve_mesh_segmentation.data_correction.convert_partnet import convert_partnet
 
 if __name__ == "__main__":
     convert_partnet(
@@ -139,7 +141,7 @@ Run the hypothesis test. If proposed label corrections are not already incorpora
 this function will do it. Otherwise, corrected data will be loaded if path is set correctly.
 
 ```python
-from detect_graspable_regions.experiments.hypothesis_test import run_hypothesis_test
+from improve_mesh_segmentation.experiments.hypothesis_test import run_hypothesis_test
 
 if __name__ == "__main__":
     run_hypothesis_test(
@@ -155,7 +157,7 @@ if __name__ == "__main__":
 ## Comparison to Filter Method
 
 ```python
-from detect_graspable_regions.experiments.cross_validation import (
+from improve_mesh_segmentation.experiments.cross_validation import (
     partnet_grasp_cross_validation, filter_method
 )
 

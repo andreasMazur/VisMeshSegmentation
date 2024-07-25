@@ -1,6 +1,6 @@
-from detect_graspable_regions.partnet_grasp.dataset import PartNetGraspDataset
-from detect_graspable_regions.training.imcnn import SegImcnn
-from detect_graspable_regions.training.train_imcnn import train_single_imcnn
+from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset
+from improve_mesh_segmentation.training.imcnn import SegImcnn
+from improve_mesh_segmentation.training.train_imcnn import train_single_imcnn
 
 import numpy as np
 import scipy as sp

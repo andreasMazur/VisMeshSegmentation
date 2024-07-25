@@ -1,5 +1,5 @@
-from detect_graspable_regions.partnet_grasp.sampling.utils import rot_mat, ModelHandler, get_chamfer_dist
-from detect_graspable_regions.partnet_grasp.sampling.constants import CAT2SYNSET
+from improve_mesh_segmentation.partnet_grasp.sampling.utils import rot_mat, ModelHandler, get_chamfer_dist
+from improve_mesh_segmentation.partnet_grasp.sampling.constants import CAT2SYNSET
 
 from io import BytesIO
 

@@ -1,5 +1,5 @@
-from detect_graspable_regions.partnet_grasp.sampling.constants import CAT2SYNSET, LABLEMAP, COLORMAP, TMPMAP
-from detect_graspable_regions.partnet_grasp.sampling.utils import ModelHandler
+from improve_mesh_segmentation.partnet_grasp.sampling.constants import CAT2SYNSET, LABLEMAP, COLORMAP, TMPMAP
+from improve_mesh_segmentation.partnet_grasp.sampling.utils import ModelHandler
 
 from io import BytesIO
 

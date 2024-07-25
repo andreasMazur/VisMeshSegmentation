@@ -1,4 +1,4 @@
-from detect_graspable_regions.partnet_grasp.sampling.constants import CAT2SYNSET, LABLEMAP
+from improve_mesh_segmentation.partnet_grasp.sampling.constants import CAT2SYNSET, LABLEMAP
 
 from scipy.spatial.distance import cdist
 from io import BytesIO

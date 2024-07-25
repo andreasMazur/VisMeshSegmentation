@@ -1,4 +1,4 @@
-from detect_graspable_regions.deepview.select_collection import SelectFromCollection
+from improve_mesh_segmentation.deepview.select_collection import SelectFromCollection
 
 from deepview.DeepView import DeepView
 
