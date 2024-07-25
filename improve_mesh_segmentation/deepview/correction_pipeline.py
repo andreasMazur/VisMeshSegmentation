@@ -1,5 +1,5 @@
-from detect_graspable_regions.deepview.deepview import DeepViewSubClass
-from detect_graspable_regions.deepview.user_interaction import interactive_seg_correction
+from improve_mesh_segmentation.deepview.deepview import DeepViewSubClass
+from improve_mesh_segmentation.deepview.user_interaction import interactive_seg_correction
 
 import numpy as np
 

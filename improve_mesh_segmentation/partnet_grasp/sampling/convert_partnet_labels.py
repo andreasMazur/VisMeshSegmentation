@@ -1,9 +1,9 @@
-from detect_graspable_regions.partnet_grasp.sampling.alignment import align_to_partnet
-from detect_graspable_regions.partnet_grasp.sampling.constants import PARTNET_EXP_GITHUB_LINK
-from detect_graspable_regions.partnet_grasp.sampling.label_shapenet_mesh import orig_segmentation
-from detect_graspable_regions.partnet_grasp.sampling.mesh_filtering import manual_filter_mesh
-from detect_graspable_regions.partnet_grasp.sampling.utils import ModelHandler, PartNetDataset, ShapeNetDataset
-from detect_graspable_regions.partnet_grasp.sampling.partnet_grasp_meshes import ANNOT_DICT
+from improve_mesh_segmentation.partnet_grasp.sampling.alignment import align_to_partnet
+from improve_mesh_segmentation.partnet_grasp.sampling.constants import PARTNET_EXP_GITHUB_LINK
+from improve_mesh_segmentation.partnet_grasp.sampling.label_shapenet_mesh import orig_segmentation
+from improve_mesh_segmentation.partnet_grasp.sampling.mesh_filtering import manual_filter_mesh
+from improve_mesh_segmentation.partnet_grasp.sampling.utils import ModelHandler, PartNetDataset, ShapeNetDataset
+from improve_mesh_segmentation.partnet_grasp.sampling.partnet_grasp_meshes import ANNOT_DICT
 
 import json
 import urllib.request
