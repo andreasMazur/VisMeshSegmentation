@@ -85,9 +85,7 @@ class DeepViewSubClass(DeepView):
         plt.show()
 
     def _init_plots(self):
-        '''
-        Initialises matplotlib artists and plots.
-        '''
+        """Initialises matplotlib artists and plots."""
         if self.interactive:
             plt.ion()
         self.fig, self.ax = plt.subplots(1, 1, figsize=(8, 8))
