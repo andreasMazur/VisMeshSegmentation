@@ -26,8 +26,8 @@ def partnet_grasp_cross_validation(k, epochs, zip_file, logging_dir, label_chang
     logging_dir: str
         The path to the logging directory.
     label_changes_path: str
-        The path to where effective changes shall be stored. Effective changes are changes that actually change the
-        label of a vertex.
+        The path where effective changes are stored. Effective changes are changes that actually change the label of a
+        vertex.
     trained_models: str
         A path to where trained models are stored. These can be loaded to skip already performed training runs.
     """
