@@ -48,6 +48,9 @@ def preprocess_data(data_path, target_dir, temp_dir=None, processes=1, n_radial=
 
     # Normalize meshes
     for mesh_idx, (mesh, _, file_name) in enumerate(rd_generator):
+        # Cut the '.npz' from filename
+        file_name = file_name[:-4]
+
         # Define file names for normed vertices and faces
         normalized_v_name = f"{temp_dir}/vertices_{mesh_idx}.npy"
         normalized_f_name = f"{temp_dir}/faces_{mesh_idx}.npy"
@@ -66,7 +69,7 @@ def preprocess_data(data_path, target_dir, temp_dir=None, processes=1, n_radial=
         np.save(label_mask_name, np.unique(mesh.faces[face_mask]))
 
         # Get geodesic diameter
-        gd = GEODESIC_DIAMETERS[(GEODESIC_DIAMETERS == float(file_name[:-4])).any(axis=-1)][0, 0]
+        gd = GEODESIC_DIAMETERS[(GEODESIC_DIAMETERS == float(file_name)).any(axis=-1)][0, 0]
 
         # Normalize mesh
         mesh = trimesh.Trimesh(mesh.vertices, mesh.faces[face_mask])
@@ -106,6 +109,9 @@ def preprocess_data(data_path, target_dir, temp_dir=None, processes=1, n_radial=
 
     # Compute GPC-systems and barycentric coordinates
     for mesh_idx, (_, vertex_labels, file_name) in enumerate(rd_generator):
+        # Cut the '.npz' from filename
+        file_name = file_name[:-4]
+
         # Define file names
         bc_name = f"{target_dir}/BC_{file_name}.npy"
         gt_name = f"{target_dir}/GT_{file_name}.npy"
