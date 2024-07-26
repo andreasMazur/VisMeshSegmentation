@@ -78,6 +78,7 @@ class DeepViewSubClass(DeepView):
         if os.name == 'posix':
             self.fig.canvas.manager.window.raise_()
 
+        #Instatiates the Lasso Selector for interaction with multiple points
         self.selector = SelectFromCollection(self.ax, self.embedded)
 
         self.fig.canvas.draw()
@@ -122,8 +123,8 @@ class DeepViewSubClass(DeepView):
 
         Parameters
         ----------
-        event:
-            TODO
+        event: matplotlib.backend_bases.event 
+            User interactions(mouse clicks, Keyboard types, etc) with the DeepView Image
         """
         # when there is an artist attribute, a
         # concrete sample was clicked, otherwise
