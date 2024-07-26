@@ -28,8 +28,8 @@ def partnet_grasp_cross_validation(k, epochs, zip_file, logging_dir, label_chang
     label_changes_path: str
         The path where effective changes are stored. Effective changes are changes that actually change the label of a
         vertex.
-    trained_models: str
-        A path to where trained models are stored. These can be loaded to skip already performed training runs.
+    trained_models: list
+        A list of paths to where trained models are stored. These can be loaded to skip already performed training runs.
     """
     # Create logging dir
     if not os.path.exists(logging_dir):
@@ -119,7 +119,15 @@ def filter_method(logging_dir):
 
         # Check the overlap of mis-classified points with the selected ones
         selected_misclassifications[d] = np.sum((relabeled + misclassification) == 2)  # TPs
-        recall[d] = selected_misclassifications[d] / np.sum(relabeled)
-        precision[d] = selected_misclassifications[d] / np.sum(misclassification)
+        if np.sum(relabeled) > 0:
+            recall[d] = selected_misclassifications[d] / np.sum(relabeled)
+        if np.sum(misclassification) > 0:
+            precision[d] = selected_misclassifications[d] / np.sum(misclassification)
 
-    return np.mean(recall), np.std(recall), np.mean(precision), np.std(precision)
+    mean_recall, std_recall, mean_pre, std_pre = np.mean(recall), np.std(recall), np.mean(precision), np.std(precision)
+    with open(f"{logging_dir}/recall_std.txt", "w") as f:
+        f.write("### COMPARISON TO FILTER METHOD ###\n")
+        f.write(f"Mean recall: {mean_recall}\n")
+        f.write(f"Standard deviation recall: {std_recall}\n")
+        f.write(f"Mean precision: {mean_pre}\n")
+        f.write(f"Standard deviation precision: {std_pre}\n")
