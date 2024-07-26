@@ -58,21 +58,22 @@ def deep_view_iter(model,
     batch_size: int
         The batch-size for DeepView.
     max_samples: int
-        TODO
+        The maximum amount of samples that DeepView will keep track of. When more samples are added, the oldest samples are removed from DeepView.
     resolution: int
-        TODO
+        x- and y- Resolution of the decision boundary plot. A high resolution will compute significantly longer than a lower resolution, as every point must be classified, default 100.
     interpolations: int
         TODO
     lam: float
-        TODO
+        (Fisher metric parameter) Controls the amount of euclidean regularization of the Fisher metric, the larger the more. Between 0 and 1, default is 1 which is no Fisher metric.
     cmap: str
         The colormap to use in DeepView.
     metric: str
-        TODO
+        This is a list of available distance functions which are calculated in the embedding spaces. As of now, one has the choice between cosine and euclidean distance. 
+        We typically use euclidean in computer vision applications and cosine in natural language processing. (required, default euclidean)
     disc_dist: bool
-        Whether to use the discriminative distance in DeepView.
+        Whether to use the discriminative distance in DeepView. Default is False since lam is 1.
     interactive: bool
-        TODO
+        When interactive is True, this method is non-blocking to allow plot updates. When interactive is False, this method is blocking to prevent termination of python scripts, default True
     title: str
         The plot title
     correction_file_name: str
