@@ -200,6 +200,7 @@ def correction_pipeline(model,
 
     if signals_are_coordinates:
         for idx, ((signal, bc), labels) in enumerate(dataset):
+            print(f"### Currently correcting mesh: {idx} ###")
             deep_view_iter(
                 model, signal, bc, signal, labels, idx, amount_classes, classes, max_samples, batch_size,
                 embedding_shape, interpolations, lam, resolution, cmap, interactive, title, metric, disc_dist,
@@ -207,6 +208,7 @@ def correction_pipeline(model,
             )
     else:
         for idx, ((signal, bc, coordinates), labels) in enumerate(dataset):
+            print(f"### Currently correcting mesh: {idx} ###")
             deep_view_iter(
                 model, signal, bc, coordinates, labels, idx, amount_classes, classes, max_samples, batch_size,
                 embedding_shape, interpolations, lam, resolution, cmap, interactive, title, metric, disc_dist,
