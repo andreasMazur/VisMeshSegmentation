@@ -4,12 +4,17 @@ from run_through.step_4 import LOGGING_DIR
 from run_through.step_6 import LABEL_CHANGES
 
 
+""" Step 8: Comparison to filter method
+
+    Run this script to redo comparison to the filter method from the paper.
+"""
+
 if __name__ == "__main__":
     cv_logs = f"{LOGGING_DIR}/cross_validation_logs"
     partnet_grasp_cross_validation(
         k=5,  # 5-fold cross validation
         epochs=10,
-        zip_file=f"{PARTNET_GRASP}.zip",  # uncorrected dataset
+        zip_file=f"{PARTNET_GRASP}.zip",  # uncorrected dataset here
         logging_dir=cv_logs,
         label_changes_path=LABEL_CHANGES
     )
