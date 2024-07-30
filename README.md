@@ -149,15 +149,21 @@ if __name__ == "__main__":
 
 ## Step 5: Correcting Segmentation Labels
 
-Next, run the segmentation label correction algorithm to interactively
-correct segmentation labels of PartNet-Grasp. 
-For this, first define the path to where the corrections-file shall be stored:
+Now the noisy segmentation labels from the alignment process need to be corrected.
+There are two options for this.
+One can either use our pre-made corrections by referring to the correction file within this repository:
+```python
+CORRECTIONS_FILE = "PATH/TO/improve_mesh_segmentation/data_correction/partnet_correction.csv"
+```
+Alternatively, one can run the segmentation label correction algorithm to interactively
+correct segmentation labels of PartNet-Grasp.
+For this, define the path to where the corrections-file shall be stored:
 
 ```python
 CORRECTIONS_FILE = "/PATH_TO/partnet_correction.csv"
 ```
 
-Then execute the following script to start the correction algorithm:
+Then, execute the following script to start the correction algorithm:
 ```python
 from improve_mesh_segmentation.data_correction.correct_sub_partnet import correct_sub_partnet
 
@@ -172,9 +178,11 @@ if __name__ == "__main__":
     )
 ```
 
-After correcting the labels the user needs to incorporate the changes into the originally
+## Step 6: Including the label corrections into the dataset
+
+After correcting, the corrected labels need to be incorporated into the originally
 preprocessed dataset.
-For this we define two new paths:
+For this two new paths need to be defined:
 1. Corrected dataset shall be stored in: `PARTNET_GRASP_CORRECTED = "PATH/TO/corrected_PartNetGrasp"`
 2. Label change arrays shall be stored in: `LABEL_CHANGES = "PATH/TO/label_changes"`
 
@@ -186,11 +194,11 @@ if __name__ == "__main__":
         old_data_path=PARTNET_GRASP,
         new_data_path=PARTNET_GRASP_CORRECTED,
         csv_path=CORRECTIONS_FILE,
-        label_changes_path=LABEL_CHANGES
+        label_changes_path=LABEL_CHANGES  # Required for 'Step 8'
     )
 ```
 
-## Step 6: Hypothesis Test
+## Step 7: Hypothesis Test
 
 Now the hypothesis test from the paper can be run by exectuing:
 
@@ -208,7 +216,7 @@ if __name__ == "__main__":
     )
 ```
 
-## Step 7: Comparison to Filter Method
+## Step 8: Comparison to Filter Method
 
 Eventually, the results for the comparison to the filter method can be run by executing:
 
