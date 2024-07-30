@@ -2,8 +2,9 @@ from improve_mesh_segmentation.partnet_grasp.preprocess import preprocess_data
 from improve_mesh_segmentation.partnet_grasp.sampling.convert_partnet_labels import convert_partnet_labels
 from improve_mesh_segmentation.partnet_grasp.sampling.utils import PartNetDataset, ShapeNetDataset
 
+# TODO: Specify the path to this repository!
+EXPERIMENT_DIRECTORY = "PATH/TO/VisMeshSegmentation"
 
-EXPERIMENT_DIRECTORY = "/home/andreas/Uni/projects/VisMeshSegmentation"
 DATASETS_PATH = f"{EXPERIMENT_DIRECTORY}/datasets"
 SAMPLED_PARTNET = f"{DATASETS_PATH}/sampled_partnet"
 PARTNET_GRASP = f"{DATASETS_PATH}/partnet_grasp"
