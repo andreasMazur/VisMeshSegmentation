@@ -147,7 +147,7 @@ if __name__ == "__main__":
     )
 ```
 
-## Step 5: Correcting Segmentation Labels
+## Step 5: Correcting segmentation labels
 
 Now the noisy segmentation labels from the alignment process need to be corrected.
 There are two options for this.
@@ -198,7 +198,7 @@ if __name__ == "__main__":
     )
 ```
 
-## Step 7: Hypothesis Test
+## Step 7: Hypothesis test
 
 Now the hypothesis test from the paper can be run by exectuing:
 
@@ -216,7 +216,7 @@ if __name__ == "__main__":
     )
 ```
 
-## Step 8: Comparison to Filter Method
+## Step 8: Comparison to filter method
 
 Eventually, the results for the comparison to the filter method can be run by executing:
 
