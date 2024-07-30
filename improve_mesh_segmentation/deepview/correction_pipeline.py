@@ -1,4 +1,4 @@
-from improve_mesh_segmentation.deepview.deepview import DeepViewSubClass
+from improve_mesh_segmentation.deepview.deepview import DeepViewMesh
 from improve_mesh_segmentation.deepview.user_interaction import interactive_seg_correction
 
 import numpy as np
@@ -74,6 +74,8 @@ def deep_view_iter(model,
         Whether to use the discriminative distance in DeepView. Default is False since lam is 1.
     interactive: bool
         When interactive is True, this method is non-blocking to allow plot updates. When interactive is False, this method is blocking to prevent termination of python scripts, default True
+    use_selector: bool
+        When True, the Lasso Selector tool is instantiated which allows for multile UMAP embeddings to be selected. When False, user must click on single points to visualize embeddings
     title: str
         The plot title
     correction_file_name: str
@@ -102,7 +104,7 @@ def deep_view_iter(model,
             file_name=correction_file_name
         )
 
-    imcnn_deepview = DeepViewSubClass(
+    imcnn_deepview = DeepViewMesh(
         lambda x: pred_wrapper(x, model),
         classes,
         max_samples,
@@ -117,7 +119,8 @@ def deep_view_iter(model,
         metric=metric,
         disc_dist=disc_dist,
         data_viz=data_viz,
-        class_dict=class_dict
+        class_dict=class_dict,
+        use_selector=True
     )
     imcnn_deepview.add_samples(embeddings, labels)
     imcnn_deepview.show()
