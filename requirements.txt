@@ -1,3 +1,7 @@
+geoconv==0.0.7
+cython==0.29.37
+torch==2.3.1
+torcheval==0.0.7
 trimesh==4.4.1
 scipy==1.11.4
 numpy==1.22.0
