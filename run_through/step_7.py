@@ -5,6 +5,11 @@ from run_through.step_5 import CORRECTIONS_FILE
 from run_through.step_6 import PARTNET_GRASP_CORRECTED
 
 
+""" Step 7: Hypothesis test
+
+    Run this script to redo the hypothesis test from the paper.
+"""
+
 if __name__ == "__main__":
     run_hypothesis_test(
         old_dataset_path=PARTNET_GRASP,
