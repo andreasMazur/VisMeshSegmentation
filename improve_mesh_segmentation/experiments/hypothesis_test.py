@@ -6,6 +6,7 @@ from pathlib import Path
 
 import os
 import scipy as sp
+import numpy as np
 
 
 def run_hypothesis_test(old_dataset_path,
@@ -82,9 +83,35 @@ def run_hypothesis_test(old_dataset_path,
         f.write(f"Test loss statistic: {loss_test_statistic}\n")
         f.write(f"Test loss p-value: {loss_p_value}\n")
         f.write("###########################\n")
+
+        # Uncorrected test accuracies
         f.write(f"Captured test accuracies (uncorrected): {test_accuracies[0]}\n")
+        uncorrected_acc = np.array(test_accuracies[0])
+        f.write(
+            f"Captured test accuracies (uncorrected) Mean/Std: {uncorrected_acc.mean()} +- {uncorrected_acc.std()}\n"
+        )
+
+        # Corrected test accuracies
         f.write(f"Captured test accuracies (deepview-corrected): {test_accuracies[1]}\n")
+        corrected_acc = np.array(test_accuracies[1])
+        f.write(
+            f"Captured test accuracies (deepview-corrected) Mean/Std: {corrected_acc.mean()} +- {corrected_acc.std()}\n"
+        )
+
         f.write("###########################\n")
+
+        # Uncorrected test losses
         f.write(f"Captured test loss (uncorrected): {test_losses[0]}\n")
+        uncorrected_loss = np.array(test_losses[0])
+        f.write(
+            f"Captured test loss (uncorrected) Mean/Std: {uncorrected_loss.mean()} +- {uncorrected_loss.std()}\n"
+        )
+
+        # Corrected test losses
         f.write(f"Captured test loss (deepview-corrected): {test_losses[1]}\n")
+        corrected_loss = np.array(test_losses[1])
+        f.write(
+            f"Captured test loss (deepview-corrected) Mean/Std: {corrected_loss.mean()} +- {corrected_loss.std()}\n"
+        )
+
         f.write("###########################\n")
