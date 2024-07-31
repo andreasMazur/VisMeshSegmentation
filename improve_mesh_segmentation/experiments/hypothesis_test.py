@@ -77,7 +77,7 @@ def run_hypothesis_test(old_dataset_path,
     loss_test_statistic, loss_p_value = sp.stats.ranksums(x=test_losses[0], y=test_losses[1])
 
     with open(mwutest_file_name, "w") as f:
-        f.write("### MANN-WHITNEY-U TEST ###\n")
+        f.write("### WILCOXON RANK-SUM TEST ###\n")
         f.write(f"Test accuracy statistic: {acc_test_statistic}\n")
         f.write(f"Test accuracy p-value: {acc_p_value}\n")
         f.write(f"Test loss statistic: {loss_test_statistic}\n")
