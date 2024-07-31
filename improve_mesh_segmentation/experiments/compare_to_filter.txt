@@ -1,0 +1,5 @@
+### COMPARISON TO FILTER METHOD ###
+Mean recall: 0.6336887805382275
+Standard deviation recall: 0.40035032486313993
+Mean precision: 0.39376634570716684
+Standard deviation precision: 0.32676890405382386
