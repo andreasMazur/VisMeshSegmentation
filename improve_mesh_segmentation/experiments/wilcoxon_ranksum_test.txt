@@ -1,4 +1,4 @@
-### MANN-WHITNEY-U TEST ###
+### WILCOXON RANK-SUM TEST ###
 Test accuracy statistic: -6.6529914385911555
 Test accuracy p-value: 2.8719490663203234e-11
 Test loss statistic: 6.6529914385911555
