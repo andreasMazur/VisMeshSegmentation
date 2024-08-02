@@ -69,11 +69,6 @@ mv PATH/TO/DOWNLOADED/ShapeNetCore/03797390.zip PATH/TO/VisMeshSegmentation/data
 mv PATH/TO/DOWNLOADED/PartNet-archive PATH/TO/VisMeshSegmentation/datasets/PartNet-archive
 ```
 
-Remember your `datasets` path:
-```python
-DATASETS_PATH = "ABSOLUTE/PATH/TO/datasets"
-```
-
 ## Step 3 to 8: Repeat the experiments from the paper
 
 In order to replicate the experiments from the paper, head into the `run_through` folder and execute scripts `step_3.py`
