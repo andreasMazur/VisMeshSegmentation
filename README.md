@@ -2,7 +2,16 @@
 
 This repository contains the **code** and an **experiment protocol** to replicate the results published in:
 
-&emsp; **Visualizing and Improving 3D Mesh Segmentation with DeepView**
+```
+@article{mrlsh:24,
+  title={Visualizing and Improving 3D Mesh Segmentation with DeepView},
+  author={Mazur, Andreas and Roberts, Isaac and Leins, David and Schulz, Alexander and Hammer, Barbara},
+  booktitle={ESANN},
+  year={2024},
+  pages={649--654}
+  doi={https://doi.org/10.14428/esann/2024.ES2024-135}
+}
+```
 
 ## Step 1: Technical prerequisites
 
