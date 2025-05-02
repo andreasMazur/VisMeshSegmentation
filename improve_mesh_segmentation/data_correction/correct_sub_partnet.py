@@ -1,4 +1,4 @@
-from improve_mesh_segmentation.deepview.correction_pipeline import correction_pipeline
+from improve_mesh_segmentation.deepview.correction_pipeline import correction_pipeline,autocorrection_pipeline
 from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset, processed_partnet_grasp_generator
 from improve_mesh_segmentation.training.imcnn import SegImcnn
 
@@ -50,6 +50,45 @@ def embed(imcnn, inputs):
     # Output
     #########
     return signal.detach().numpy()
+
+def autocorrect_sub_partnet(data_path, model_path, correction_csv_path=None):
+    """Runs DeepView correction with the given IMCNN.
+
+    data_path: str
+        The path to where the (uncorrected) dataset is stored.
+    model_path: str
+        The path to where the trained segmentation model is stored. The model should be trained on the dataset that
+        is referred to by 'data_path'.
+    correction_csv_path: str
+        The path to where to store the correction suggestions.
+    """
+    if correction_csv_path is None:
+        correction_csv_path = "./partnet_correction.csv"
+
+    model = SegImcnn(adapt_data=PartNetGraspDataset(data_path, set_type=0, only_signal=True))
+    model.load_state_dict(torch.load(model_path))
+
+    # Load the dataset
+    dataset = processed_partnet_grasp_generator(data_path, set_type=3)
+
+    # Create class descriptions
+    class_dict = {
+        0: "non-graspable",
+        1: "graspable"
+    }
+
+    # Start correcting
+    autocorrection_pipeline(
+        model=model,
+        dataset=dataset,
+        embedding_shape=(96,),
+        embed_fn=embed,
+        pred_fn=pred_wrapper,
+        class_dict=class_dict,
+        signals_are_coordinates=True,
+        correction_file_name=correction_csv_path,
+        max_samples=10_000
+    )
 
 
 def correct_sub_partnet(data_path, model_path, correction_csv_path=None):

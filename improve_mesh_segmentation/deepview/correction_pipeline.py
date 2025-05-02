@@ -3,6 +3,223 @@ from improve_mesh_segmentation.deepview.user_interaction import interactive_seg_
 
 import numpy as np
 
+from relabel_helpers.deepview_label_corrections import DeepViewLabelRevisit
+from relabel_helpers.recommendation_functions import recommend_KNN_based
+
+
+def deep_view_iter_auto(model,
+                   signal,
+                   bc,
+                   coordinates,
+                   labels,
+                   idx,
+                   amount_classes,
+                   classes,
+                   max_samples,
+                   batch_size,
+                   embedding_shape,
+                   interpolations,
+                   lam,
+                   resolution,
+                   cmap,
+                   interactive,
+                   title,
+                   metric,
+                   disc_dist,
+                   class_dict,
+                   correction_file_name,
+                   embed_fn,
+                   pred_wrapper):
+    """Correct the segmentation labels for one mesh.
+
+    Parameters
+    ----------
+    model: SegImcnn
+        A segmentation IMCNN.
+    signal: torch.Tensor
+        The signal defined on the shape.
+    bc: torch.Tensor
+        The barycentric coordinates for the shape.
+    coordinates: torch.Tensor
+        The 3D-coordinates of the mesh vertices.
+    labels: torch.Tensor
+        The original ground truth labels for the mesh vertices.
+    idx: int
+        The mesh index.
+    amount_classes: int
+        The total amount of available classes.
+    classes: np.ndarray
+        All class labels in an array.
+    embedding_shape: tuple
+        The shape of the embedding vectors that the model uses to predict vertex probabilities. E.g., (96,) for
+        96-dimensional embeddings.
+    embed_fn: Callable
+        The function that takes the IMCNN and returns the embeddings that the model uses to predict vertex class
+        probabilities.
+    class_dict: dict
+        A dictionary that maps class labels (integers) to their class names (strings).
+    batch_size: int
+        The batch-size for DeepView.
+    max_samples: int
+        The maximum amount of samples that DeepView will keep track of. When more samples are added, the oldest samples are removed from DeepView.
+    resolution: int
+        x- and y- Resolution of the decision boundary plot. A high resolution will compute significantly longer than a lower resolution, as every point must be classified, default 100.
+    interpolations: int
+        Number of interpolations for distance calculation of two images. Labeled as "n" in the original DeepView work
+    lam: float
+        (Fisher metric parameter) Controls the amount of euclidean regularization of the Fisher metric, the larger the more. Between 0 and 1, default is 1 which is no Fisher metric.
+    cmap: str
+        The colormap to use in DeepView.
+    metric: str
+        This is a list of available distance functions which are calculated in the embedding spaces. As of now, one has the choice between cosine and euclidean distance.
+        We typically use euclidean in computer vision applications and cosine in natural language processing. (required, default euclidean)
+    disc_dist: bool
+        Whether to use the discriminative distance in DeepView. Default is False since lam is 1.
+    interactive: bool
+        When interactive is True, this method is non-blocking to allow plot updates. When interactive is False, this method is blocking to prevent termination of python scripts, default True
+    use_selector: bool
+        When True, the Lasso Selector tool is instantiated which allows for multile UMAP embeddings to be selected. When False, user must click on single points to visualize embeddings
+    title: str
+        The plot title
+    correction_file_name: str
+        The filename of the CSV-file where to store correction data.
+    pred_wrapper: Callable
+        A function that returns the predicted probabilities for a mesh vertex of a given IMCNN.
+    """
+    # Get model embeddings
+    embeddings = embed_fn(model, [signal, bc])
+
+    # Determine segments by binning the vertices by their class labels
+    coordinates = np.array(coordinates)
+    all_segments = [coordinates[np.where(labels == x)[0]] for x in range(amount_classes)]
+
+    imcnn_deepview = DeepViewLabelRevisit(
+        lambda x: pred_wrapper(x, model),
+        classes,
+        max_samples,
+        batch_size,
+        embedding_shape,
+        interpolations,
+        lam,
+        resolution,
+        cmap,
+        interactive,
+        title,
+        metric=metric,
+        disc_dist=disc_dist,
+        class_dict=class_dict
+    )
+    imcnn_deepview.add_samples(embeddings, labels)
+
+    correction_percentages = np.arange(10, 110, 10)
+    for percent in correction_percentages:
+        correction_file_name = "./corrections/corrected_labels_deepviewbackground_" + str(percent) + ".csv"
+
+        knn_corrected_labels, _, change_label_indices = recommend_KNN_based(
+        embeddings, labels.numpy(), imcnn_deepview.background_at, n_neighbors=5, recommendation_percentage=percent)
+
+        with open(correction_file_name, "a") as f:
+            for i, (query_idx) in enumerate(change_label_indices):
+                f.write(f"{idx},{query_idx},{knn_corrected_labels[query_idx]}\n")
+
+    print("shape" + str(idx) + " was corrected")
+
+def autocorrection_pipeline(model,
+                        dataset,
+                        embedding_shape,
+                        embed_fn,
+                        pred_fn,
+                        class_dict,
+                        signals_are_coordinates=False,
+                        batch_size=64,
+                        max_samples=7000,
+                        resolution=100,
+                        interpolations=10,
+                        lam=1,
+                        cmap=None,
+                        metric=None,
+                        disc_dist=False,
+                        interactive=False,
+                        title=None,
+                        correction_file_name=None):
+    """Use DeepView, IMCNNs and 3D Visualizations to interactively correct segmentation labels for mesh partnet_grasp.
+
+    Parameters
+    ----------
+    model: SegImcnn
+        A segmentation IMCNN.
+    dataset: generator
+        Generator for the (uncorrected) Partnet-grasp dataset.
+    embedding_shape: tuple
+        The shape of the embedding vectors that the model uses to predict vertex probabilities. E.g., (96,) for
+        96-dimensional embeddings.
+    embed_fn: Callable
+        The function that takes the IMCNN and returns the embeddings that the model uses to predict vertex class
+        probabilities.
+    pred_fn: Callable
+        The function that takes the IMCNN and returns the probabilities that the model uses to predict vertex classes.
+    class_dict: dict
+        A dictionary that maps class labels (integers) to their class names (strings).
+    signals_are_coordinates: bool
+        Whether the signals returned by 'old_dataset' are 3D-coordinates.
+    batch_size: int
+        The batch-size for DeepView.
+    max_samples: int
+        The maximum amount of samples that DeepView will keep track of. When more samples are added, the oldest samples are removed from DeepView.
+    resolution: int
+        x- and y- Resolution of the decision boundary plot. A high resolution will compute significantly longer than a lower resolution, as every point must be classified, default 100.
+    interpolations: int
+        Number of interpolations for distance calculation of two images. Labeled as "n" in the original DeepView work
+    lam: float
+        (Fisher metric parameter) Controls the amount of euclidean regularization of the Fisher metric, the larger the more. Between 0 and 1, default is 1 which is no Fisher metric.
+    cmap: str
+        The colormap to use in DeepView.
+    metric: str
+        This is a list of available distance functions which are calculated in the embedding spaces. As of now, one has the choice between cosine and euclidean distance.
+        We typically use euclidean in computer vision applications and cosine in natural language processing. (required, default euclidean)
+    disc_dist: bool
+        Whether to use the discriminative distance in DeepView. Default is False since lam is 1.
+    interactive: bool
+        When interactive is True, this method is non-blocking to allow plot updates. When interactive is False, this method is blocking to prevent termination of python scripts, default True
+    title: str
+        The plot title
+    correction_file_name: str
+        The filename of the CSV-file where to store correction data.
+    """
+    # --- Deep View Parameters ----
+    amount_classes = len(class_dict)
+    classes = np.arange(amount_classes)
+    if cmap is None:
+        cmap = "tab10"
+    if metric is None:
+        metric = "euclidean"
+    if title is None:
+        title = "Default Title"
+    # if correction_file_name is None:
+    #     correction_file_name = "corrected_labels.csv"
+    # -----------------------------
+
+    # correction_percentages = np.arange(10, 110, 10)
+    # for percent in correction_percentages:
+    #     correction_file_name = "./corrections/corrected_labels_deepviewbackground_" + str(percent) + ".csv"
+    if signals_are_coordinates:
+        for idx, ((signal, bc), labels) in enumerate(dataset):
+            print(f"### Currently correcting mesh: {idx} ###")
+            deep_view_iter_auto(
+                    model, signal, bc, signal, labels, idx, amount_classes, classes, max_samples, batch_size,
+                    embedding_shape, interpolations, lam, resolution, cmap, interactive, title, metric, disc_dist,
+                    class_dict, correction_file_name, embed_fn, pred_fn
+                )
+    else:
+        for idx, ((signal, bc, coordinates), labels) in enumerate(dataset):
+            print(f"### Currently correcting mesh: {idx} ###")
+            deep_view_iter_auto(
+                    model, signal, bc, coordinates, labels, idx, amount_classes, classes, max_samples, batch_size,
+                    embedding_shape, interpolations, lam, resolution, cmap, interactive, title, metric, disc_dist,
+                    class_dict,  correction_file_name, embed_fn, pred_fn
+                )
+
+
 
 def deep_view_iter(model,
                    signal,

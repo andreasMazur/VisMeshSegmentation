@@ -9,10 +9,10 @@ from run_through.step_3 import EXPERIMENT_DIRECTORY, PARTNET_GRASP
 
 
 LOGGING_DIR = f"{EXPERIMENT_DIRECTORY}/logs"
-
+PARTNET_GRASP = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp"
 if __name__ == "__main__":
     train_single_imcnn(
-        data_path=f"{PARTNET_GRASP}.zip",
+        data_path=PARTNET_GRASP,
         n_epochs=10,
         logging_dir=LOGGING_DIR,
         skip_validation=False,
