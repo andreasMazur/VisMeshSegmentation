@@ -202,7 +202,7 @@ def run_graph(paths,
     plt.title('Effect of KNN-based Label Correction on Accuracy')
     plt.grid(True)
     plt.legend()
-    plt.savefig(logging_dir+"/accuracy_fig")
+    plt.savefig(logging_dir+"/accuracyinf_fig")
 
     # Separate data
     x_values = np.arange(0, 110, 10)  # 0 to 90 (inclusive) -> 10 values
@@ -220,5 +220,5 @@ def run_graph(paths,
     plt.title('Effect of KNN-based Label Correction on Losses')
     plt.grid(True)
     plt.legend()
-    plt.savefig(logging_dir+"/loss_fig")
+    plt.savefig(logging_dir+"/lossinf_fig")
 

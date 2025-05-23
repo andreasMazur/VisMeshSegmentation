@@ -14,18 +14,18 @@ from run_through.step_6 import PARTNET_GRASP_CORRECTED
 
 if __name__ == "__main__":
     datasets_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/"
-    datasets = ['partnet_grasp.zip','partnet_grasp_corrected_deepviewbackground_10.zip', 'partnet_grasp_corrected_deepviewbackground_20.zip',
-     'partnet_grasp_corrected_deepviewbackground_30.zip', 'partnet_grasp_corrected_deepviewbackground_40.zip',
-     'partnet_grasp_corrected_deepviewbackground_50.zip', 'partnet_grasp_corrected_deepviewbackground_60.zip',
-     'partnet_grasp_corrected_deepviewbackground_70.zip', 'partnet_grasp_corrected_deepviewbackground_80.zip',
-     'partnet_grasp_corrected_deepviewbackground_90.zip', 'partnet_grasp_corrected_deepviewbackground_100.zip',
+    datasets = ['partnet_grasp.zip','partnet_grasp_corrected_deepview_influence_background_10.zip', 'partnet_grasp_corrected_deepview_influence_background_20.zip',
+     'partnet_grasp_corrected_deepview_influence_background_30.zip', 'partnet_grasp_corrected_deepview_influence_background_40.zip',
+     'partnet_grasp_corrected_deepview_influence_background_50.zip', 'partnet_grasp_corrected_deepview_influence_background_60.zip',
+     'partnet_grasp_corrected_deepview_influence_background_70.zip', 'partnet_grasp_corrected_deepview_influence_background_80.zip',
+     'partnet_grasp_corrected_deepview_influence_background_90.zip', 'partnet_grasp_corrected_deepview_influence_background_100.zip',
      'partnet_grasp_corrected.zip',]
 
     # print(os.listdir(datasets_path))
     # print([datasets_path + dataset for dataset in datasets])
     run_graph(
         paths=[datasets_path + dataset for dataset in datasets],
-        logging_dir=f"{LOGGING_DIR}/hypothesis_test_logs",
+        logging_dir=f"{LOGGING_DIR}/hypothesis_test_inf_logs",
         trials=30,
         epochs=10
     )

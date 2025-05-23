@@ -4,7 +4,7 @@ from improve_mesh_segmentation.deepview.user_interaction import interactive_seg_
 import numpy as np
 
 from relabel_helpers.deepview_label_corrections import DeepViewLabelRevisit
-from relabel_helpers.recommendation_functions import recommend_KNN_based
+from relabel_helpers.recommendation_functions import recommend_KNN_based,recommend_KNN_w_influence_based
 
 
 def deep_view_iter_auto(model,
@@ -110,14 +110,15 @@ def deep_view_iter_auto(model,
         class_dict=class_dict
     )
     imcnn_deepview.add_samples(embeddings, labels)
+    # imcnn_deepview.show()
+    # correction_percentages = np.arange(10, 110, 10)
+    # for percent in correction_percentages:
+    correction_file_name = "./corrections/corrected_labels_deepview_preds_" + str(100) + ".csv"
 
-    correction_percentages = np.arange(10, 110, 10)
-    for percent in correction_percentages:
-        correction_file_name = "./corrections/corrected_labels_deepviewbackground_" + str(percent) + ".csv"
+    knn_corrected_labels, _, change_label_indices = recommend_KNN_based(
+        embeddings, labels.numpy(), imcnn_deepview.y_pred, n_neighbors=5, recommendation_percentage=100)
 
-        knn_corrected_labels, _, change_label_indices = recommend_KNN_based(
-        embeddings, labels.numpy(), imcnn_deepview.background_at, n_neighbors=5, recommendation_percentage=percent)
-
+    if len(change_label_indices) > 0:
         with open(correction_file_name, "a") as f:
             for i, (query_idx) in enumerate(change_label_indices):
                 f.write(f"{idx},{query_idx},{knn_corrected_labels[query_idx]}\n")

@@ -1,0 +1,72 @@
+from collections import defaultdict
+import numpy as np
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
+
+from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset, processed_partnet_grasp_generator
+
+
+
+
+og_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp.zip"
+corrected_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected.zip"
+# corrected_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected_deepviewbackground_100.zip"
+method1_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected_deepview_influence_background_100.zip"
+method2_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected_deepviewbackground_100.zip"
+method3_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected_deepview_preds_100.zip"
+
+
+
+
+if __name__ == "__main__":
+    # Load shared datasets into memory (as lists)
+    og_dataset = list(processed_partnet_grasp_generator(og_data_path, set_type=0))
+    corrected_dataset = list(processed_partnet_grasp_generator(corrected_data_path, set_type=0))
+
+    # List of automated correction methods and their datasets (also convert to list)
+    automated_methods = {
+        "method1": list(processed_partnet_grasp_generator(method1_path, set_type=0)),
+        "method2": list(processed_partnet_grasp_generator(method2_path, set_type=0)),
+        "method3": list(processed_partnet_grasp_generator(method3_path, set_type=0)),
+    }
+
+    # key = method name, value = dict of lists for precision/recall/F1 of corrections
+    correction_agreement = defaultdict(lambda: {"precision": [], "recall": [], "f1": []})
+
+    # Loop through each method
+    for method_name, auto_dataset in automated_methods.items():
+        print(f"Evaluating correction overlap for {method_name}...")
+
+        for mesh_idx, (((_, _), og_labels), ((_, _), cor_labels), ((_, _), auto_labels)) in enumerate(
+                zip(og_dataset, corrected_dataset, auto_dataset)
+        ):
+            og_labels = np.array(og_labels)
+            cor_labels = np.array(cor_labels)
+            auto_labels = np.array(auto_labels)
+
+            if not (og_labels.shape == cor_labels.shape == auto_labels.shape):
+                print(f"[{method_name}] Shape mismatch at mesh {mesh_idx}")
+                continue
+
+            # Masks where the label was changed
+            oracle_changed = og_labels != cor_labels
+            auto_changed = og_labels != auto_labels
+
+            # Binary labels: 1 if correction, 0 if no change
+            y_true = oracle_changed.astype(int)
+            y_pred = auto_changed.astype(int)
+
+            # Metrics: did the automated method change the *same* labels?
+            prec = precision_score(y_true, y_pred, zero_division=0)
+            rec = recall_score(y_true, y_pred, zero_division=0)
+            f1 = f1_score(y_true, y_pred, zero_division=0)
+
+            # print(classification_report(y_true,y_pred))
+            correction_agreement[method_name]["precision"].append(prec)
+            correction_agreement[method_name]["recall"].append(rec)
+            correction_agreement[method_name]["f1"].append(f1)
+
+    # Print summary
+    for method_name, metrics in correction_agreement.items():
+        print(f"\n=== Correction Agreement: {method_name} ===")
+        for metric, values in metrics.items():
+            print(f"{metric.capitalize()}: Mean = {np.mean(values):.3f}, Std = {np.std(values):.3f}")
