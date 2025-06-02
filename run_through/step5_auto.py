@@ -26,8 +26,8 @@ else:
 
 # You only need to run this if you are NOT using 'OPTION 1'.
 if __name__ == "__main__":
-    # matplotlib.use("Qt5Agg")
-    autocorrect_sub_partnet(
+    matplotlib.use("Qt5Agg")
+    correct_sub_partnet(
         data_path=PARTNET_GRASP,
         model_path=f"{LOGGING_DIR}/model.zip",
         correction_csv_path=CORRECTIONS_FILE

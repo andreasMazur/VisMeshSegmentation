@@ -1,4 +1,5 @@
 from torch import nn
+from tqdm import tqdm
 
 from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset, processed_partnet_grasp_generator
 from improve_mesh_segmentation.training.imcnn import SegImcnn
@@ -53,39 +54,36 @@ if __name__ == "__main__":
 
     model = SegImcnn(adapt_data=PartNetGraspDataset(data_path, set_type=0, only_signal=True))
     model.load_state_dict(torch.load(model_path))
-    # model = model.to(device)
+    model.eval()  # Set to evaluation mode
     print(f"Model parameters on CUDA: {next(model.parameters()).is_cuda}")
 
-    dataset = processed_partnet_grasp_generator(data_path, set_type=0)
+    # Load dataset (should be small enough to fit in memory for Hessian approx)
+    dataset = list(processed_partnet_grasp_generator(data_path, set_type=0))
 
+    # Step 1: Compute total loss across entire dataset
+    total_loss = 0
+    model.zero_grad()
+    for (signal, bc), labels in tqdm(dataset, desc="Accumulating total loss"):
+        pred = model([signal, bc])
+        loss_all = criterion(pred, labels)  # (N,)
+        total_loss += loss_all.sum()
+
+    # Step 2: Compute total gradient
+    total_grad = torch.autograd.grad(total_loss, model.parameters(), create_graph=True)
+    total_grad_flat = torch.cat([g.reshape(-1) for g in total_grad])
+
+    # Step 3: Compute inverse Hessian-vector product globally
+    print("Estimating inverse Hessian-vector product...")
+    s_m = conjugate_gradient(total_loss, model, total_grad_flat)
+
+    # Step 4: Compute influence scores per point using global inverse Hessian
     all_influence_scores = []
 
-    for mesh_idx, ((signal, bc), labels) in enumerate(dataset):
-        # signal = signal.to(device)
-        # bc = bc.to(device)
-        # labels = labels.to(device)
-        model.zero_grad()
-
-        # 🔍 Sanity check: devices
-        # assert signal.device == device, f"Signal is on {signal.device}, expected {device}"
-        # assert bc.device == device, f"Barycentric coords are on {bc.device}, expected {device}"
-        # assert labels.device == device, f"Labels are on {labels.device}, expected {device}"
-        # for p in model.parameters():
-        #     assert p.device == device, f"Model parameter not on {device}"
-
-        pred = model([signal, bc])  # shape (N, C)
-        loss_all = criterion(pred, labels)  # shape (N,)
-        total_loss = loss_all.sum()
-
-        # Compute total mesh gradient
-        total_grad = torch.autograd.grad(total_loss, model.parameters(), create_graph=True)
-        total_grad_flat = torch.cat([g.reshape(-1) for g in total_grad]).detach()
-
-        # Estimate inverse Hessian-vector product
-        s_m = conjugate_gradient(total_loss, model, total_grad_flat)
+    for mesh_idx, ((signal, bc), labels) in enumerate(tqdm(dataset, desc="Computing influence per mesh")):
+        pred = model([signal, bc])
+        loss_all = criterion(pred, labels)
 
         mesh_influences = []
-
         for i in range(labels.shape[0]):
             point_loss = loss_all[i]
             point_grad = torch.autograd.grad(point_loss, model.parameters(), retain_graph=True)
@@ -99,14 +97,14 @@ if __name__ == "__main__":
         })
 
         print(f"[{mesh_idx}] Computed influence for {len(mesh_influences)} vertices.")
-        # print(all_influence_scores)
-        # break
 
-    # (Optional) Save results
+    # Optionally save results
     import json
 
-    with open("influence_scores.json", "w") as f:
+    with open("influence_scores1.json", "w") as f:
         json.dump(all_influence_scores, f)
+
+    print("✅ Influence score computation complete.")
 
 
 

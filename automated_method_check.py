@@ -1,3 +1,4 @@
+import os
 from collections import defaultdict
 import numpy as np
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
@@ -10,11 +11,13 @@ from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset,
 og_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp.zip"
 corrected_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected.zip"
 # corrected_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected_deepviewbackground_100.zip"
-method1_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected_deepview_influence_background_100.zip"
-method2_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected_deepviewbackground_100.zip"
+method1_path = "/improve_mesh_segmentation/datasets/deepview_influence_sort_percentage/partnet_grasp_corrected_deepview_influence_background_100.zip"
+method2_path = "/improve_mesh_segmentation/datasets/deepview_background_percentage/partnet_grasp_corrected_deepviewbackground_100.zip"
 method3_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected_deepview_preds_100.zip"
 
+unc_baseline = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/misclassification_uncertainty_baseline_percentage/"
 
+inf_baseline = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/misclassification_influence_baseline_percentage/"
 
 
 if __name__ == "__main__":
@@ -24,13 +27,19 @@ if __name__ == "__main__":
 
     # List of automated correction methods and their datasets (also convert to list)
     automated_methods = {
-        "method1": list(processed_partnet_grasp_generator(method1_path, set_type=0)),
-        "method2": list(processed_partnet_grasp_generator(method2_path, set_type=0)),
-        "method3": list(processed_partnet_grasp_generator(method3_path, set_type=0)),
+        "Deepview NN background and Influence": list(processed_partnet_grasp_generator(method1_path, set_type=0)),
+        "Deepview NN background": list(processed_partnet_grasp_generator(method2_path, set_type=0)),
+        "Deepview NN Prediction": list(processed_partnet_grasp_generator(method3_path, set_type=0)),
     }
 
+    for file in os.listdir(unc_baseline):
+        automated_methods[str(file)] = list(processed_partnet_grasp_generator(unc_baseline + file, set_type=0))
+
+    for file in os.listdir(inf_baseline):
+        automated_methods[str(file)] = list(processed_partnet_grasp_generator(inf_baseline + file, set_type=0))
+
     # key = method name, value = dict of lists for precision/recall/F1 of corrections
-    correction_agreement = defaultdict(lambda: {"precision": [], "recall": [], "f1": []})
+    correction_agreement = defaultdict(lambda: {"precision": [], "recall": [], "f1": [], "no_of_changes":[]})
 
     # Loop through each method
     for method_name, auto_dataset in automated_methods.items():
@@ -64,9 +73,14 @@ if __name__ == "__main__":
             correction_agreement[method_name]["precision"].append(prec)
             correction_agreement[method_name]["recall"].append(rec)
             correction_agreement[method_name]["f1"].append(f1)
+            correction_agreement[method_name]["no_of_changes"].append(sum(y_pred))
+
 
     # Print summary
     for method_name, metrics in correction_agreement.items():
         print(f"\n=== Correction Agreement: {method_name} ===")
         for metric, values in metrics.items():
-            print(f"{metric.capitalize()}: Mean = {np.mean(values):.3f}, Std = {np.std(values):.3f}")
+            if metric != "no_of_changes":
+                print(f"{metric.capitalize()}: Mean = {np.mean(values):.3f}, Std = {np.std(values):.3f}")
+            else:
+                print(f"{metric.capitalize()}: Mean = {np.sum(values):.3f}")

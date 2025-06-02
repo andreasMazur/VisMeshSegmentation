@@ -11,6 +11,7 @@ import os
 class DeepViewLabelRevisit(DeepView):
 
     def __init__(self, *args, **kwargs):
+        self.changed_indices = None
         super().__init__(*args, **kwargs)
 
 
@@ -56,6 +57,7 @@ class DeepViewLabelRevisit(DeepView):
         changed_labels, all_indices, keep_indices = recommend_KNN_based(self.samples, self.y_true,
                                                                                self.background_at, 5,
                                                                                recommendation_percentage=percentage)
+        self.changed_indices = keep_indices
         return keep_indices
 
     def show(self):

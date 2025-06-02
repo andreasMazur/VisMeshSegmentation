@@ -110,18 +110,18 @@ def deep_view_iter_auto(model,
         class_dict=class_dict
     )
     imcnn_deepview.add_samples(embeddings, labels)
-    # imcnn_deepview.show()
+    imcnn_deepview.show()
     # correction_percentages = np.arange(10, 110, 10)
     # for percent in correction_percentages:
-    correction_file_name = "./corrections/corrected_labels_deepview_preds_" + str(100) + ".csv"
-
-    knn_corrected_labels, _, change_label_indices = recommend_KNN_based(
-        embeddings, labels.numpy(), imcnn_deepview.y_pred, n_neighbors=5, recommendation_percentage=100)
-
-    if len(change_label_indices) > 0:
-        with open(correction_file_name, "a") as f:
-            for i, (query_idx) in enumerate(change_label_indices):
-                f.write(f"{idx},{query_idx},{knn_corrected_labels[query_idx]}\n")
+    # correction_file_name = "./corrections/corrected_labels_deepview_preds_" + str(100) + ".csv"
+    #
+    # knn_corrected_labels, _, change_label_indices = recommend_KNN_based(
+    #     embeddings, labels.numpy(), imcnn_deepview.y_pred, n_neighbors=5, recommendation_percentage=100)
+    #
+    # if len(change_label_indices) > 0:
+    #     with open(correction_file_name, "a") as f:
+    #         for i, (query_idx) in enumerate(change_label_indices):
+    #             f.write(f"{idx},{query_idx},{knn_corrected_labels[query_idx]}\n")
 
     print("shape" + str(idx) + " was corrected")
 
@@ -355,7 +355,7 @@ def correction_pipeline(model,
                         max_samples=7000,
                         resolution=100,
                         interpolations=10,
-                        lam=1,
+                        lam=.5,
                         cmap=None,
                         metric=None,
                         disc_dist=False,
@@ -410,7 +410,8 @@ def correction_pipeline(model,
     amount_classes = len(class_dict)
     classes = np.arange(amount_classes)
     if cmap is None:
-        cmap = "tab10"
+        # cmap = "tab10"
+        cmap = 'RdBu'
     if metric is None:
         metric = "euclidean"
     if title is None:
