@@ -21,15 +21,21 @@ if __name__ == "__main__":
     corrections_path = "/home/iroberts/projects/VisMeshSegmentation/run_through/corrections/"
     # print(os.listdir(corrections_path))
     ks = np.arange(500, 9500, 500)
-    # ['misclassification_sorted_unc', 'misclassification_sorted_inf', 'random_baseline', 'influence_baseline',
-    # "deepview_background_random", "deepview_background_sorted_inf", "deepview_background_sorted_unc" ]
-    for method in ["influence_uncertainty_combination_baseline"]:
+    # ['misclassification_sorted_unc', 'misclassification_sorted_inf', 'random_baseline', 'influence_baseline', "influence_uncertainty_combination_baseline",
+    # "deepview_background_random", "deepview_background_sorted_inf", "deepview_background_sorted_unc","deepview_kmeans" ]
+
+    # for j in list(range(1,11)):
+    #     method = "global_lvq_"  + str(j)
+    # js = [5,10,25,50,100,250,500]
+    # for j in js:
+    #     method = "global_cvknn_" + str(j)
+    for method in ["cv_majority_baseline"]:
         for k in ks:
             PARTNET_GRASP_CORRECTED = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/" + method + "/" + method + "_k_" + str(k)
             LABEL_CHANGES = None
             convert_partnet(
                     old_data_path=PARTNET_GRASP,
                     new_data_path=PARTNET_GRASP_CORRECTED,
-                    csv_path=corrections_path + method + "/" + method + "_k_" + str(k)+".csv",
+                    csv_path=corrections_path + method + "/" + method + "_" + str(k)+".csv",
                     label_changes_path=LABEL_CHANGES  # Required for 'Step 8'
                 )

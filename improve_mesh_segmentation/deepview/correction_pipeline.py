@@ -411,7 +411,7 @@ def correction_pipeline(model,
     classes = np.arange(amount_classes)
     if cmap is None:
         # cmap = "tab10"
-        cmap = 'RdBu'
+        cmap = 'tab10'
     if metric is None:
         metric = "euclidean"
     if title is None:

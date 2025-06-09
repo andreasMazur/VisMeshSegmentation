@@ -43,7 +43,7 @@ class DeepViewMesh(DeepView):
 
         elif not self.disable_synth:
             # workaraound: inverse embedding needs more points
-            # otherwise it doens't work --> [point]*5
+            # otherwise it doens'knn_30_corrections work --> [point]*5
             point = np.array([[event.xdata, event.ydata]] * 5)
 
             # if the outside of the plot was clicked, points are None

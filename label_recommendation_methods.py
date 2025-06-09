@@ -11,16 +11,20 @@ from torch import nn
 from improve_mesh_segmentation.data_correction.correct_sub_partnet import pred_wrapper
 
 from filter_methods import misclassifications_uncertainty_baseline, misclassifications_influence_baseline, \
-    influence_baseline, deepview_variants, influence_uncertainty_combination_baseline, deepview_kmeans
+    influence_baseline, deepview_variants, influence_uncertainty_combination_baseline, deepview_kmeans, _lvq, \
+    deepview_dbscan
 from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset, processed_partnet_grasp_generator
 from improve_mesh_segmentation.data_correction.correct_sub_partnet import embed
 from improve_mesh_segmentation.training.imcnn import SegImcnn
 
 from helper_functions import *
 
+from sklearn.metrics import rand_score,adjusted_rand_score
+
 og_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp.zip"
 
 model_path = "/home/iroberts/projects/VisMeshSegmentation/run_through/logs/model.zip"
+corrected_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected.zip"
 
 
 def global_mesh_sort(neighbors_dict, values_dict, descending=False):
@@ -46,7 +50,7 @@ def global_mesh_sort(neighbors_dict, values_dict, descending=False):
 if __name__ == "__main__":
     # Load shared datasets into memory (as lists)
     og_dataset = list(processed_partnet_grasp_generator(og_data_path, set_type=0))
-    # corrected_dataset = list(processed_partnet_grasp_generator(corrected_data_path, set_type=0))
+    corrected_dataset = list(processed_partnet_grasp_generator(corrected_data_path, set_type=0))
 
     imcnn = SegImcnn(adapt_data=PartNetGraspDataset(og_data_path, set_type=0, only_signal=True))
     imcnn.load_state_dict(torch.load(model_path))
@@ -74,7 +78,7 @@ if __name__ == "__main__":
     mesh_value1 = {}
     mesh_value2 = {}
     mesh_preds = {}
-    for mesh_idx, ((signal, bc), labels) in enumerate(og_dataset):
+    for mesh_idx, (((signal, bc), labels),((_, _), cor_labels)) in enumerate(zip(og_dataset,corrected_dataset)):
         print(".....Correcting Mesh Index: ", mesh_idx)
         labels = np.array(labels)
         embeddings = embed(imcnn, [signal, bc])
@@ -82,6 +86,11 @@ if __name__ == "__main__":
         preds = np.argmax(classification_head(embeddings).detach().numpy(), axis=1)
         # idxs,unc, inf  = deepview_variants(pred_wrapper, embeddings, labels, stochastic_model,mesh_idx)
         idxs, unc = deepview_kmeans(pred_wrapper, embeddings, labels, preds, stochastic_model)
+        # idxs, unc = deepview_dbscan(pred_wrapper, embeddings, labels, preds, stochastic_model)
+        # idxs, unc = _lvq(embeddings, labels,preds, stochastic_model)
+        # print("Rand with bad labels:" + str(rand_score(labels,idxs)) + " \nADJ Rand with bad labels:" + str(adjusted_rand_score(labels,idxs)))
+        # print("Rand with good labels:" + str(rand_score(cor_labels, idxs)) + " \nADJ Rand with good labels :" + str(
+        #     adjusted_rand_score(cor_labels, idxs)))
         # idxs,unc = misclassifications_uncertainty_baseline(embeddings,stochastic_model,labels,preds)
         # idxs,inf = misclassifications_influence_baseline(embeddings,labels,preds,mesh_idx)
         # idxs,inf = influence_baseline(embeddings, mesh_idx)
@@ -100,9 +109,17 @@ if __name__ == "__main__":
             # points_to_change = sorted_by_unc[:len(sorted_by_unc)]
             # write_label_changes(path_to_corrections+file_name, points_to_change, mesh_preds)
 
-            file_name = "deepview_kmeans/deepview_kmeans_k_" + str(k) + ".csv"
+            # file_name = "deepview_kmeans7/deepview_kmeans_7_" + str(k) + ".csv"
+            # points_to_change = sorted_by_unc[:len(sorted_by_unc)]
+            # write_label_changes(path_to_corrections + file_name, points_to_change, mesh_preds)
+
+            file_name = "deepview_kmeans/deepview_kmeans_" + str(k) + ".csv"
             points_to_change = sorted_by_unc[:len(sorted_by_unc)]
             write_label_changes(path_to_corrections + file_name, points_to_change, mesh_preds)
+
+            # file_name = "lvq/lvq_k_" + str(k) + ".csv"
+            # points_to_change = sorted_by_unc[:len(sorted_by_unc)]
+            # write_label_changes(path_to_corrections + file_name, points_to_change, mesh_preds)
 
             # file_name = "misclassification_sorted_inf/misclassification_sorted_inf_k_" + str(k) + ".csv"
             # points_to_change = sorted_by_inf[:len(sorted_by_inf)]
@@ -130,9 +147,17 @@ if __name__ == "__main__":
             # points_to_change = sorted_by_unc[:k]
             # write_label_changes(path_to_corrections + file_name, points_to_change, mesh_preds)
 
-            file_name = "deepview_kmeans/deepview_kmeans_k_" + str(k) + ".csv"
+            # file_name = "lvq/lvq_k_" + str(k) + ".csv"
+            # points_to_change = sorted_by_unc[:k]
+            # write_label_changes(path_to_corrections + file_name, points_to_change, mesh_preds)
+
+            file_name = "deepview_kmeans/deepview_kmeans_" + str(k) + ".csv"
             points_to_change = sorted_by_unc[:k]
             write_label_changes(path_to_corrections + file_name, points_to_change, mesh_preds)
+
+            # file_name = "deepview_kmeans7/deepview_kmeans_7_" + str(k) + ".csv"
+            # points_to_change = sorted_by_unc[:k]
+            # write_label_changes(path_to_corrections + file_name, points_to_change, mesh_preds)
 
             # file_name = "misclassification_sorted_inf/misclassification_sorted_inf_k_" + str(k) + ".csv"
             # points_to_change = sorted_by_inf[:k]

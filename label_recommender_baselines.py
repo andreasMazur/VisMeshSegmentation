@@ -134,11 +134,11 @@ if __name__ == "__main__":
         #
         # # Calculate entropy
         # a, prob_mat = uncertainty_matrices(predictions)
-        # t, e, a = entropy_uncertainty(prob_mat)
+        # knn_30_corrections, e, a = entropy_uncertainty(prob_mat)
         # #
         preds = np.argmax(classification_head(torch.tensor(embeddings)).detach().numpy(),axis=1)
         misclassified_labels_idxs = np.where(preds != og_labels)[0]
-        # inc_sorted_unc_idxs = np.argsort(t[misclassified_labels_idxs])
+        # inc_sorted_unc_idxs = np.argsort(knn_30_corrections[misclassified_labels_idxs])
         # inc_sorted_misclassified_labels_idxs = misclassified_labels_idxs[inc_sorted_unc_idxs]
 
         # Randomly select indices to accept recommendations

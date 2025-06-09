@@ -35,9 +35,12 @@ if __name__ == "__main__":
     # --- Load automated correction datasets ---
     automated_methods = {}
     ks = np.arange(500, 9500, 500)
-    method_names = ['misclassification_sorted_unc', 'misclassification_sorted_inf', 'random_baseline',
-                    'influence_baseline', 'influence_uncertainty_combination_baseline', 'deepview_background_random']
-                    # "deepview_background_random", "deepview_background_sorted_inf", "deepview_background_sorted_unc"]
+    method_names = ["global_cvknn_" + str(num) for num in [100,250,500]] + ['cv_majority_baseline','global_lvq_4', 'global_knn_5000','global_knn_true500', 'misclassification_sorted_unc','misclassification_sorted_inf']
+        # [ "global_knn_100", "global_knn_250", "global_knn_500",'misclassification_sorted_unc', 'misclassification_sorted_inf'
+        #             , "global_knn_1000", "global_knn_1500", "global_knn_2000", "global_knn_3000", "global_knn_4000", "global_knn_5000", ]
+                    # 'deepview_background_random', "deepview_background_sorted_inf", "deepview_background_sorted_unc",
+                    #  "deepview_kmeans","global_kmeans","knn_100_corrections","global_dbscan"]
+                    #"knn_30_corrections", "knn_5_corrections", "deepview_kmeans7","deepview_dbscan","global_knn_5", "global_knn_10", "global_knn_25", "global_knn_50",]
 
     for method in method_names:
         for k in ks:
@@ -102,9 +105,10 @@ if __name__ == "__main__":
         plt.grid(True, linestyle='--', alpha=0.6)
         plt.legend(title="Method", fontsize=10)
         plt.tight_layout()
-        plt.show()
+        # plt.show()
 
 
     # --- Plot all metrics ---
     for metric in ["precision", "recall", "f1"]:
         plot_metric(metric, correction_agreement)
+        plt.savefig("./figs/"+str(metric))

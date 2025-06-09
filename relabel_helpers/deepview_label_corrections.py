@@ -7,7 +7,9 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import os
+from deepview.config import max_iter
 
+max_iter = 500
 class DeepViewLabelRevisit(DeepView):
 
     def __init__(self, *args, **kwargs):

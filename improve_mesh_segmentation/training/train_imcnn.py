@@ -1,3 +1,6 @@
+import numpy as np
+from sklearn.model_selection import KFold
+
 from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset
 from improve_mesh_segmentation.training.imcnn import SegImcnn
 from improve_mesh_segmentation.training.train_logging import log_training
@@ -5,6 +8,102 @@ from improve_mesh_segmentation.training.train_logging import log_training
 from torch import nn
 
 import torch
+
+
+def train_imcnn_cv(data_path,
+                       n_epochs,
+                       logging_dir=None,
+                       adapt_data=None,
+                       train_data=None,
+                       val_data=None,
+                       test_data=None,
+                       skip_validation=True,
+                       skip_testing=False,
+                       verbose=False):
+    """Trains a single Intrinsic Mesh CNN on a subset of the PartNet dataset.
+
+    Parameters
+    ----------
+    data_path: str
+        The path to the preprocessed PartNet dataset zip-file.
+    n_epochs: int
+        The amount of epochs for which the model shall be trained for.
+    logging_dir: str
+        The logging directory for the training.
+    adapt_data: PartNetGraspDataset
+        The adaption data for the segmentation IMCNN. Used by the input normalization layer to normalize the mesh
+        signals.
+    train_data: PartNetGraspDataset
+        The training data.
+    val_data: PartNetGraspDataset
+        The validation data.
+    test_data: PartNetGraspDataset
+        The testing data.
+    skip_validation: bool
+        Whether to skip model validation.
+    skip_testing: bool
+        Whether to skip model testing.
+    verbose: bool
+        Whether to print intermediate training information to the console.
+    """
+    X = np.arange(70)
+    cv = KFold(n_splits=7)
+    for i, (train_idxs, test_idxs) in enumerate(cv.split(X)):
+
+
+        model = SegImcnn(
+            adapt_data=PartNetGraspDataset(data_path,set_type=0, only_signal=True, set_indices=train_idxs) if adapt_data is None else adapt_data
+        )
+        train_hist = {
+            "train_loss": [],
+            "train_accuracy": [],
+            "val_loss": [],
+            "val_accuracy": [],
+            "test_loss": [],
+            "test_accuracy": []
+        }
+        for epoch in range(n_epochs):
+            # Reset generators for new epoch
+            if train_data is not None:
+                train_data.reset()
+            if val_data is not None:
+                val_data.reset()
+
+            # Training
+            epoch_train_hist = model.train_loop(
+                dataset=PartNetGraspDataset(set_type=0, path_to_zip=data_path) if train_data is None else train_data,
+                loss_fn=nn.CrossEntropyLoss(),
+                optimizer=torch.optim.Adam(model.parameters()),
+                verbose=True,
+                epoch=epoch
+            )
+            train_hist["train_loss"].append(float(epoch_train_hist["epoch_loss"].detach()))
+            train_hist["train_accuracy"].append(float(epoch_train_hist["epoch_accuracy"].detach()))
+
+            # Validation
+            if not skip_validation:
+                epoch_val_hist = model.validation_loop(
+                    dataset=PartNetGraspDataset(set_type=1, path_to_zip=data_path) if val_data is None else val_data,
+                    loss_fn=nn.CrossEntropyLoss(),
+                    verbose=True
+                )
+                train_hist["val_loss"].append(float(epoch_val_hist["val_epoch_loss"].detach()))
+                train_hist["val_accuracy"].append(float(epoch_val_hist["val_epoch_accuracy"].detach()))
+
+        # Testing
+        if not skip_testing:
+            epoch_test_hist = model.validation_loop(
+                dataset=PartNetGraspDataset(set_type=0, set_indices=test_idxs, path_to_zip=data_path) if test_data is None else test_data,
+                loss_fn=nn.CrossEntropyLoss(),
+                verbose=False
+            )
+            train_hist["test_loss"].append(float(epoch_test_hist["val_epoch_loss"].detach()))
+            train_hist["test_accuracy"].append(float(epoch_test_hist["val_epoch_accuracy"].detach()))
+
+        if logging_dir is not None:
+            log_training(model, train_hist, logging_dir+"model_cv_"+str(i), skip_validation, skip_testing, verbose=verbose)
+
+    return model, train_hist
 
 
 def train_single_imcnn(data_path,
@@ -43,6 +142,8 @@ def train_single_imcnn(data_path,
     verbose: bool
         Whether to print intermediate training information to the console.
     """
+
+
     model = SegImcnn(
         adapt_data=PartNetGraspDataset(data_path, set_type=0, only_signal=True) if adapt_data is None else adapt_data
     )

@@ -11,13 +11,22 @@ from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset,
 og_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp.zip"
 corrected_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected.zip"
 # corrected_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected_deepviewbackground_100.zip"
-method1_path = "/improve_mesh_segmentation/datasets/deepview_influence_sort_percentage/partnet_grasp_corrected_deepview_influence_background_100.zip"
-method2_path = "/improve_mesh_segmentation/datasets/deepview_background_percentage/partnet_grasp_corrected_deepviewbackground_100.zip"
-method3_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected_deepview_preds_100.zip"
+# method1_path = "/improve_mesh_segmentation/datasets/deepview_influence_sort_percentage/partnet_grasp_corrected_deepview_influence_background_100.zip"
+# method2_path = "/improve_mesh_segmentation/datasets/deepview_background_percentage/partnet_grasp_corrected_deepviewbackground_100.zip"
+# method3_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected_deepview_preds_100.zip"
+#
+# unc_baseline = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/misclassification_uncertainty_baseline_percentage/"
+#
+# inf_baseline = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/misclassification_influence_baseline_percentage/"
 
-unc_baseline = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/misclassification_uncertainty_baseline_percentage/"
+# [ "global_knn_true"  + str(j) for j in [1000, 1500, 2000, 3000, 4000, 5000]] + ['global_lvq_4', 'global_knn_5000', 'misclassification_sorted_unc','misclassification_sorted_inf']
+        # [ "global_knn_100", "global_knn_250", "global_knn_500",'misclassification_sorted_unc', 'misclassification_sorted_inf'
+        #             , "global_knn_1000", "global_knn_1500", "global_knn_2000", "global_knn_3000", "global_knn_4000", "global_knn_5000", ]
+                    # 'deepview_background_random', "deepview_background_sorted_inf", "deepview_background_sorted_unc",
+                    #  "deepview_kmeans","global_kmeans","knn_100_corrections","global_dbscan"]
+                    #"knn_30_corrections", "knn_5_corrections", "deepview_kmeans7","deepview_dbscan","global_knn_5", "global_knn_10", "global_knn_25", "global_knn_50",]
 
-inf_baseline = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/misclassification_influence_baseline_percentage/"
+datasets_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/"
 
 
 if __name__ == "__main__":
@@ -27,16 +36,17 @@ if __name__ == "__main__":
 
     # List of automated correction methods and their datasets (also convert to list)
     automated_methods = {
-        "Deepview NN background and Influence": list(processed_partnet_grasp_generator(method1_path, set_type=0)),
-        "Deepview NN background": list(processed_partnet_grasp_generator(method2_path, set_type=0)),
-        "Deepview NN Prediction": list(processed_partnet_grasp_generator(method3_path, set_type=0)),
+
     }
+    dirs = ["global_knn_true" + str(j) for j in [5,10,25,50,100,250,500]]
+    # dirs = ["global_lvq_" + str(j) for j in list(range(1,11))]
+    for dir in dirs:
+        files = datasets_path + dir
+        for file in os.listdir(files):
+            automated_methods[str(file)] = list(processed_partnet_grasp_generator(files +"/" + file, set_type=0))
 
-    for file in os.listdir(unc_baseline):
-        automated_methods[str(file)] = list(processed_partnet_grasp_generator(unc_baseline + file, set_type=0))
-
-    for file in os.listdir(inf_baseline):
-        automated_methods[str(file)] = list(processed_partnet_grasp_generator(inf_baseline + file, set_type=0))
+    # for file in os.listdir(inf_baseline):
+    #     automated_methods[str(file)] = list(processed_partnet_grasp_generator(inf_baseline + file, set_type=0))
 
     # key = method name, value = dict of lists for precision/recall/F1 of corrections
     correction_agreement = defaultdict(lambda: {"precision": [], "recall": [], "f1": [], "no_of_changes":[]})
@@ -83,4 +93,4 @@ if __name__ == "__main__":
             if metric != "no_of_changes":
                 print(f"{metric.capitalize()}: Mean = {np.mean(values):.3f}, Std = {np.std(values):.3f}")
             else:
-                print(f"{metric.capitalize()}: Mean = {np.sum(values):.3f}")
+                print(f"{metric.capitalize()}: sum = {np.sum(values):.3f}")
