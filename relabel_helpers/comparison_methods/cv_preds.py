@@ -1,14 +1,11 @@
-import os
 from collections import Counter
 
 import torch
 
-from helper_functions import write_label_changes
+from relabel_helpers.helper_functions import write_label_changes
 from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset, processed_partnet_grasp_generator
 from improve_mesh_segmentation.training.imcnn import SegImcnn
-from improve_mesh_segmentation.training.train_imcnn import train_single_imcnn, train_imcnn_cv
 from run_through.step_3 import EXPERIMENT_DIRECTORY, PARTNET_GRASP
-from sklearn.model_selection import KFold
 import numpy as np
 
 """ Step 4: Train an initial IMCNN
@@ -29,7 +26,7 @@ def cv_model_pred(signal, bc, labels, voting="majority", percentage_misclass=0.5
            final_preds: (num_points,) numpy array of predicted labels
            misclassified_idxs: list of indices based on voting strategy
        """
-    models_path = "/home/iroberts/projects/VisMeshSegmentation/run_through/logs/cv/"
+    models_path = "/run_through/logs/cv/"
     model_dirs = ['model_cv_0', 'model_cv_1', 'model_cv_2', 'model_cv_3', 'model_cv_4', 'model_cv_5', 'model_cv_6']
     num_models = len(model_dirs)
     cv_preds = []
@@ -127,7 +124,7 @@ if __name__ == "__main__":
     #             "mesh_idx": mesh_idx.item(),
     #             "preds": preds,
     #         })
-    path_to_corrections = "/home/iroberts/projects/VisMeshSegmentation/run_through/corrections/"
+    path_to_corrections = "/run_through/corrections/"
 
     dataset = list(processed_partnet_grasp_generator(PARTNET_GRASP, set_type=0))
     cv_preds = []

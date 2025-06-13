@@ -8,8 +8,8 @@ from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset,
 
 
 
-og_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp.zip"
-corrected_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected.zip"
+og_data_path = "/improve_mesh_segmentation/datasets/partnet_grasp.zip"
+corrected_data_path = "/improve_mesh_segmentation/datasets/partnet_grasp_corrected.zip"
 # corrected_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected_deepviewbackground_100.zip"
 # method1_path = "/improve_mesh_segmentation/datasets/deepview_influence_sort_percentage/partnet_grasp_corrected_deepview_influence_background_100.zip"
 # method2_path = "/improve_mesh_segmentation/datasets/deepview_background_percentage/partnet_grasp_corrected_deepviewbackground_100.zip"
@@ -26,7 +26,7 @@ corrected_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_
                     #  "deepview_kmeans","global_kmeans","knn_100_corrections","global_dbscan"]
                     #"knn_30_corrections", "knn_5_corrections", "deepview_kmeans7","deepview_dbscan","global_knn_5", "global_knn_10", "global_knn_25", "global_knn_50",]
 
-datasets_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/"
+datasets_path = "/improve_mesh_segmentation/datasets/"
 
 
 if __name__ == "__main__":

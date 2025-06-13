@@ -1,10 +1,9 @@
 import json
 
-import numpy as np
 from sklearn.cluster import KMeans,DBSCAN
 from sklvq import GLVQ
 
-from helper_functions import *
+from relabel_helpers.helper_functions import *
 from relabel_helpers.deepview_label_corrections import DeepViewLabelRevisit
 from relabel_helpers.recommendation_functions import recommend_KNN_based
 
@@ -16,7 +15,7 @@ from collections import Counter
 def influence_baseline(data,mesh_idx):
     idxs = np.array(list(range(len(data))))
     # Randomly select indices to accept recommendations
-    with open('/home/iroberts/projects/VisMeshSegmentation/influence_scores1.json', 'r') as f:
+    with open('/influence_scores1.json', 'r') as f:
         influence_scores = json.load(f)
 
     influence_dict = {entry['mesh_idx']: entry['influence_per_vertex'] for entry in influence_scores}
@@ -30,7 +29,7 @@ def influence_baseline(data,mesh_idx):
 def influence_uncertainty_combination_baseline(data,mesh_idx,model,labels):
     idxs = np.array(list(range(len(data))))
     # Randomly select indices to accept recommendations
-    with open('/home/iroberts/projects/VisMeshSegmentation/influence_scores1.json', 'r') as f:
+    with open('/influence_scores1.json', 'r') as f:
         influence_scores = json.load(f)
 
     influence_dict = {entry['mesh_idx']: entry['influence_per_vertex'] for entry in influence_scores}
@@ -84,7 +83,7 @@ def misclassifications_influence_baseline(data,labels,preds,mesh_idx):
 
 
     # Randomly select indices to accept recommendations
-    with open('/home/iroberts/projects/VisMeshSegmentation/influence_scores1.json', 'r') as f:
+    with open('/influence_scores1.json', 'r') as f:
         influence_scores = json.load(f)
 
     influence_dict = {entry['mesh_idx']: entry['influence_per_vertex'] for entry in influence_scores}
@@ -129,7 +128,7 @@ def deepview_variants(pred_wrapper,data,labels,model,mesh_idx):
     unc = t[change_labels]
 
     # Randomly select indices to accept recommendations
-    with open('/home/iroberts/projects/VisMeshSegmentation/influence_scores.json', 'r') as f:
+    with open('/influence_scores.json', 'r') as f:
         influence_scores = json.load(f)
 
     influence_dict = {entry['mesh_idx']: entry['influence_per_vertex'] for entry in influence_scores}

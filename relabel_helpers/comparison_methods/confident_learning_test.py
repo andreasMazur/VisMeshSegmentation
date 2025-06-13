@@ -1,34 +1,17 @@
-import collections
 import json
-from collections import defaultdict
-import random
-import os
 
-import cleanlab
-import numpy as np
-import scipy as sp
-import torch
 from cleanlab.filter import find_label_issues
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
-from torch import nn
-from improve_mesh_segmentation.data_correction.correct_sub_partnet import pred_wrapper
 
-from filter_methods import misclassifications_uncertainty_baseline, misclassifications_influence_baseline, \
-    influence_baseline, deepview_variants, influence_uncertainty_combination_baseline, deepview_kmeans, _lvq, \
-    deepview_dbscan, knn_label_correction, kmeans_label_correction, dbscan_label_correction, \
-    supervised_kmeans_label_correction, lvq_label_correction
 from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset, processed_partnet_grasp_generator
 from improve_mesh_segmentation.data_correction.correct_sub_partnet import embed
 from improve_mesh_segmentation.training.imcnn import SegImcnn
 
-from helper_functions import *
+from relabel_helpers.helper_functions import *
 
-from sklearn.metrics import rand_score,adjusted_rand_score
+og_data_path = "/improve_mesh_segmentation/datasets/partnet_grasp.zip"
 
-og_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp.zip"
-
-model_path = "/home/iroberts/projects/VisMeshSegmentation/run_through/logs/model.zip"
-corrected_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected.zip"
+model_path = "/run_through/logs/model.zip"
+corrected_data_path = "/improve_mesh_segmentation/datasets/partnet_grasp_corrected.zip"
 
 def get_embeddings_labels_preds_with_idx_map(og_dataset, imcnn, classification_head, mesh_range):
     """
@@ -111,7 +94,7 @@ if __name__ == "__main__":
     # embs, labels, preds, map, pred_dict, g_unc_dict = get_embeddings_labels_preds_with_idx_map(og_dataset, imcnn,
     #                                                                                            classification_head,
     #                                                                                            range(0, 70))
-    with open('cv_preds.json', 'r') as f:
+    with open('../../cv_preds.json', 'r') as f:
         cv_preds = json.load(f)
 
     # Convert to a dictionary for quick mesh_idx lookup

@@ -10,8 +10,8 @@ import seaborn as sns
 
 
 
-og_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp.zip"
-corrected_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected.zip"
+og_data_path = "/improve_mesh_segmentation/datasets/partnet_grasp.zip"
+corrected_data_path = "/improve_mesh_segmentation/datasets/partnet_grasp_corrected.zip"
 
 
 if __name__ == "__main__":
