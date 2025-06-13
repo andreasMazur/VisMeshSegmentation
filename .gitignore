@@ -289,3 +289,4 @@ poetry.toml
 
 # LSP config files
 pyrightconfig.json
+/run_through/corrections/
