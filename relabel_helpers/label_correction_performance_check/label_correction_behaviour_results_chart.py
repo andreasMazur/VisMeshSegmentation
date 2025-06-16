@@ -10,8 +10,8 @@ import seaborn as sns
 
 
 
-og_data_path = "/improve_mesh_segmentation/datasets/partnet_grasp.zip"
-corrected_data_path = "/improve_mesh_segmentation/datasets/partnet_grasp_corrected.zip"
+og_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp.zip"
+corrected_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected.zip"
 
 
 if __name__ == "__main__":
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     # --- Load automated correction datasets ---
     automated_methods = {}
     ks = np.arange(500, 9500, 500)
-    method_names = ["global_cvknn_" + str(num) for num in [100,250,500]] + ['cv_majority_baseline','global_lvq_4', 'global_knn_5000','global_knn_true500', 'misclassification_sorted_unc','misclassification_sorted_inf']
+    method_names =  ['iterative_kmeans','iterative_knn','deepview_kmeanstl','deepview_knn_bg','deepview_knn_t','confident_learning','cv_majority_baseline','global_lvq_4', 'global_knn_5000','global_knn_true500', 'misclassification_sorted_unc',]
         # [ "global_knn_100", "global_knn_250", "global_knn_500",'misclassification_sorted_unc', 'misclassification_sorted_inf'
         #             , "global_knn_1000", "global_knn_1500", "global_knn_2000", "global_knn_3000", "global_knn_4000", "global_knn_5000", ]
                     # 'deepview_background_random', "deepview_background_sorted_inf", "deepview_background_sorted_unc",
@@ -111,4 +111,4 @@ if __name__ == "__main__":
     # --- Plot all metrics ---
     for metric in ["precision", "recall", "f1"]:
         plot_metric(metric, correction_agreement)
-        plt.savefig("./figs/"+str(metric))
+        plt.savefig("./performance_figs/"+str(metric))

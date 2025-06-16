@@ -143,10 +143,15 @@ def train_single_imcnn(data_path,
         Whether to print intermediate training information to the console.
     """
 
+    if torch.cuda.is_available():
+        device = torch.device("cuda:0")
+    else:
+        device = torch.device("cpu")
 
     model = SegImcnn(
         adapt_data=PartNetGraspDataset(data_path, set_type=0, only_signal=True) if adapt_data is None else adapt_data
     )
+    model.to(device)
     train_hist = {
         "train_loss": [],
         "train_accuracy": [],

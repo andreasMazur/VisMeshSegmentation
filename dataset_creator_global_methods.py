@@ -188,7 +188,7 @@ if __name__ == "__main__":
     imcnn.load_state_dict(torch.load(model_path))
     classification_head = imcnn.model.output_dense
 
-    with open('cv_preds.json', 'r') as f:
+    with open('cv_out_of_sample_preds.json', 'r') as f:
         cv_preds = json.load(f)
 
     # Convert to a dictionary for quick mesh_idx lookup

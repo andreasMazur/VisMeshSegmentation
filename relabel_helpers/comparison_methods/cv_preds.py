@@ -158,5 +158,5 @@ if __name__ == "__main__":
 
     # import json
     #
-    # with open("../cv_preds.json", "w") as f:
+    # with open("../cv_out_of_sample_preds.json", "w") as f:
     #     json.dump(cv_pred_dict, f)

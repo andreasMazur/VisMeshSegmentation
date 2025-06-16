@@ -94,7 +94,26 @@ def misclassifications_influence_baseline(data,labels,preds,mesh_idx):
 
     return misclassified_labels_idxs,influential_mismatch_values
 
-def deepview_variants(pred_wrapper,data,labels,model,mesh_idx):
+
+def _knn(data, labels, model):
+    changed_labels, all_indices, keep_indices= recommend_KNN_based(data, labels, labels, n_neighbors=15, recommendation_percentage=100)
+
+    changed_indices = np.where(changed_labels != labels)[0]
+
+    dataset = EmbeddingDataset(data, labels)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=8)
+
+    # Get output Distribution
+    predictions = predict_with_uncertainty_batched(model, dataloader, n_iter=30)
+    predictions = predictions.numpy()
+
+    # Calculate entropy
+    a, prob_mat = uncertainty_matrices(predictions)
+    t, e, a = entropy_uncertainty(prob_mat)
+
+    return changed_indices, t[changed_indices], changed_labels
+
+def deepview_knn(pred_wrapper,data,labels,model,mesh_idx):
     # --- Deep View Parameters ----
     batch_size = 32
     max_samples = 100000
@@ -112,7 +131,7 @@ def deepview_variants(pred_wrapper,data,labels,model,mesh_idx):
                                     N, lam, resolution, cmap, interactive, title, disc_dist=False)
 
     deepview.add_samples(data, labels)
-    change_labels = deepview.recommend_label_correction(100)
+    change_indices, changed_labels = deepview.recommend_label_correction(15,100)
 
     dataset = EmbeddingDataset(data, labels)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=8)
@@ -125,17 +144,17 @@ def deepview_variants(pred_wrapper,data,labels,model,mesh_idx):
     a, prob_mat = uncertainty_matrices(predictions)
     t, e, a = entropy_uncertainty(prob_mat)
 
-    unc = t[change_labels]
+    unc = t[change_indices]
 
     # Randomly select indices to accept recommendations
-    with open('/influence_scores.json', 'r') as f:
-        influence_scores = json.load(f)
+    # with open('/influence_scores.json', 'r') as f:
+    #     influence_scores = json.load(f)
+    #
+    # influence_dict = {entry['mesh_idx']: entry['influence_per_vertex'] for entry in influence_scores}
+    #
+    # inf = np.abs(np.array(influence_dict[mesh_idx])[change_labels])
 
-    influence_dict = {entry['mesh_idx']: entry['influence_per_vertex'] for entry in influence_scores}
-
-    inf = np.abs(np.array(influence_dict[mesh_idx])[change_labels])
-
-    return change_labels, unc, inf
+    return change_indices, unc, changed_labels
 
 
 def knn_label_correction(data,labels,preds,combined_mesh_idxs,unc_dict,k):
@@ -162,7 +181,7 @@ def kmeans_label_correction(data,labels,preds,combined_mesh_idxs,unc_dict):
 
     for val in np.unique(kmeans.labels_):
         idxs = np.where(kmeans.labels_ == val)
-        avg_pred = np.round(np.mean(preds[idxs]),0)
+        avg_pred = np.round(np.mean(labels[idxs]),0)
         changed_labels[idxs] = avg_pred
 
     changed_indices = np.where(changed_labels != labels)[0]
@@ -241,6 +260,32 @@ def lvq_label_correction(data, labels, preds, combined_mesh_idxs, unc_dict, prot
 
     return result, changed_idx_unc, new_labels
 
+
+def _kmeans(data, labels, model):
+    kmeans = KMeans(n_clusters=5, random_state=0, n_init="auto").fit(data)
+    # preds = kmeans.predict(data)
+    changed_labels = labels.copy()
+    for val in np.unique(kmeans.labels_):
+        idxs = np.where(kmeans.labels_ == val)
+        avg_pred = np.round(np.mean(labels[idxs]), 0)
+        changed_labels[idxs] = avg_pred
+
+    changed_indices = np.where(changed_labels != labels)[0]
+
+    dataset = EmbeddingDataset(data, labels)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=8)
+
+    # Get output Distribution
+    predictions = predict_with_uncertainty_batched(model, dataloader, n_iter=30)
+    predictions = predictions.numpy()
+
+    # Calculate entropy
+    a, prob_mat = uncertainty_matrices(predictions)
+    t, e, a = entropy_uncertainty(prob_mat)
+
+    return changed_indices, t[changed_indices], changed_labels
+
+
 def deepview_kmeans(pred_wrapper,data,labels,preds,model):
     # --- Deep View Parameters ----
     batch_size = 32
@@ -264,7 +309,7 @@ def deepview_kmeans(pred_wrapper,data,labels,preds,model):
     changed_labels = labels.copy()
     for val in np.unique(kmeans.labels_):
         idxs = np.where(kmeans.labels_ == val)
-        avg_pred = np.round(np.mean(preds[idxs]),0)
+        avg_pred = np.round(np.mean(labels[idxs]),0)
         changed_labels[idxs] = avg_pred
 
     changed_indices = np.where(changed_labels != labels)[0]
@@ -280,7 +325,82 @@ def deepview_kmeans(pred_wrapper,data,labels,preds,model):
     a, prob_mat = uncertainty_matrices(predictions)
     t, e, a = entropy_uncertainty(prob_mat)
 
-    return changed_indices, t[changed_indices]
+    return changed_indices, t[changed_indices], changed_labels
+
+
+def deepview_sup_kmeans(pred_wrapper,data,labels,preds,model):
+    # --- Deep View Parameters ----
+    batch_size = 32
+    max_samples = 100000
+    data_shape = (96,)
+    resolution = 100
+    N = 10
+    lam = 1
+    cmap = 'tab10'
+    # to make shure deepview.show is blocking,
+    # disable interactive mode
+    interactive = False
+    title = 'Automatic Relabeling'
+
+    deepview = DeepViewLabelRevisit(pred_wrapper, np.arange(2), max_samples, batch_size, data_shape,
+                                    N, lam, resolution, cmap, interactive, title, disc_dist=False)
+
+    deepview.add_samples(data, labels)
+    changed_indices, changed_labels = supervised_kmeans_label_correction(deepview.embedded, preds, n_clusters=5, topk=1)
+
+    dataset = EmbeddingDataset(data, labels)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=8)
+
+    # Get output Distribution
+    predictions = predict_with_uncertainty_batched(model, dataloader, n_iter=30)
+    predictions = predictions.numpy()
+
+    # Calculate entropy
+    a, prob_mat = uncertainty_matrices(predictions)
+    t, e, a = entropy_uncertainty(prob_mat)
+
+    return changed_indices, t[changed_indices], changed_labels
+
+def deepview_kmeans_bg(pred_wrapper,data,labels,preds,model):
+    # --- Deep View Parameters ----
+    batch_size = 32
+    max_samples = 100000
+    data_shape = (96,)
+    resolution = 100
+    N = 10
+    lam = 1
+    cmap = 'tab10'
+    # to make shure deepview.show is blocking,
+    # disable interactive mode
+    interactive = False
+    title = 'Automatic Relabeling'
+
+    deepview = DeepViewLabelRevisit(pred_wrapper, np.arange(2), max_samples, batch_size, data_shape,
+                                    N, lam, resolution, cmap, interactive, title, disc_dist=False)
+
+    deepview.add_samples(data, labels)
+    kmeans = KMeans(n_clusters=5, random_state=0, n_init="auto").fit(np.swapaxes(deepview.grid.reshape(deepview.grid.shape[0],-1),0,1))
+    k_preds = kmeans.predict(deepview.embedded)
+    changed_labels = labels.copy()
+    for val in np.unique(kmeans.labels_):
+        idxs = np.where(k_preds == val)
+        avg_pred = np.round(np.mean(labels[idxs]),0)
+        changed_labels[idxs] = avg_pred
+
+    changed_indices = np.where(changed_labels != labels)[0]
+
+    dataset = EmbeddingDataset(data, labels)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=8)
+
+    # Get output Distribution
+    predictions = predict_with_uncertainty_batched(model, dataloader, n_iter=30)
+    predictions = predictions.numpy()
+
+    # Calculate entropy
+    a, prob_mat = uncertainty_matrices(predictions)
+    t, e, a = entropy_uncertainty(prob_mat)
+
+    return changed_indices, t[changed_indices], changed_labels
 
 
 def deepview_dbscan(pred_wrapper,data,labels,preds,model):
@@ -301,7 +421,7 @@ def deepview_dbscan(pred_wrapper,data,labels,preds,model):
                                     N, lam, resolution, cmap, interactive, title, disc_dist=False)
 
     deepview.add_samples(data, labels)
-    clustering = DBSCAN().fit(data)
+    clustering = DBSCAN(eps=.5,min_samples=50).fit(deepview.embedded)
     # preds = kmeans.predict(deepview.embedded)
     changed_labels = labels.copy()
     for val in np.unique(clustering.labels_):
@@ -322,7 +442,7 @@ def deepview_dbscan(pred_wrapper,data,labels,preds,model):
     a, prob_mat = uncertainty_matrices(predictions)
     t, e, a = entropy_uncertainty(prob_mat)
 
-    return changed_indices, t[changed_indices]
+    return changed_indices, t[changed_indices], changed_labels
 
 
 def _lvq(data, labels, preds, model):
@@ -415,25 +535,16 @@ def predict_with_prototypes(
     return np.array(preds)
 
 
-def supervised_kmeans_label_correction(data, labels, pred, combined_mesh_idxs, unc_dict, n_clusters=5, topk=1):
+def supervised_kmeans_label_correction(data, labels, n_clusters=3, topk=1):
     class_to_centroids = fit_classwise_kmeans(data, labels, n_clusters=n_clusters)
 
     preds = predict_with_prototypes(data, class_to_centroids, top_k=topk, voting="majority" )
 
     changed_indices = np.where(preds != labels)[0]
 
-    result = {}
-    new_labels = {}
-    for key, values in combined_mesh_idxs.items():
-        positions = [i for i, v in enumerate(values) if v in changed_indices]
-        new_labels[key] = preds[values]
-        result[key] = positions
 
-    changed_idx_unc = {}
-    for key in result.keys():
-        changed_idx_unc[key] = unc_dict[key][result[key]]
 
-    return result, changed_idx_unc, new_labels
+    return changed_indices, preds
 
 
 

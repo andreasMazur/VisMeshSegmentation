@@ -1,3 +1,4 @@
+import torch
 from matplotlib import pyplot as plt
 
 from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset
@@ -9,6 +10,119 @@ from pathlib import Path
 import os
 import scipy as sp
 import numpy as np
+
+
+
+
+
+
+def run_extended_hypothesis_test(
+    old_dataset_path,
+    deepview_csv_path,
+    correction_methods,
+    data_dir,
+    logging_dir,
+    trials=30,
+    epochs=10,
+):
+    """
+    Run hypothesis testing for multiple correction methods against uncorrected and DeepView-corrected data.
+
+    Parameters
+    ----------
+    old_dataset_path: str
+        Path to the original dataset (uncorrected)
+    deepview_csv_path: str
+        CSV with DeepView label corrections
+    correction_methods: list of tuples
+        List of (method_name, csv_path) for additional correction methods
+    logging_dir: str
+        Output directory for logs
+    trials: int
+        Number of training trials per comparison
+    epochs: int
+        Number of epochs per trial
+    """
+
+    os.makedirs(logging_dir, exist_ok=True)
+
+    if torch.cuda.is_available():
+        device = torch.device("cuda:0")
+    else:
+        device = torch.device("cpu")
+
+    # Prepare dataset paths
+    old_dataset_zip = f"{old_dataset_path}.zip"
+    dataset_versions = [("uncorrected", old_dataset_zip)]
+
+    # Add DeepView-corrected
+    deepview_dataset_path = f"{data_dir}/partnet_grasp_corrected.zip"
+    if not Path(deepview_dataset_path).is_file():
+        convert_partnet(old_dataset_path, deepview_dataset_path, deepview_csv_path)
+    dataset_versions.append(("deepview", deepview_dataset_path))
+
+    # Add other correction methods
+    for method_name, csv_path in correction_methods:
+        method_dataset_path = f"{data_dir}/{method_name}/{method_name}_corrected.zip"
+        if not Path(method_dataset_path).is_file():
+            convert_partnet(old_dataset_path, method_dataset_path, csv_path)
+        dataset_versions.append((method_name, method_dataset_path))
+
+    # Storage for results
+    results = {name: {"acc": [], "loss": []} for name, _ in dataset_versions}
+
+    # Run training for each dataset version
+    for method_name, zip_file in dataset_versions:
+        for trial_idx in range(trials):
+            print(f"Training on {method_name} | Trial {trial_idx}")
+
+            adaptation_data = PartNetGraspDataset(zip_file, set_type=0, only_signal=True,device= device)
+            train_data = PartNetGraspDataset(zip_file, set_type=0,device=device)
+            val_data = PartNetGraspDataset(deepview_dataset_path, set_type=1,device=device)
+            test_data = PartNetGraspDataset(deepview_dataset_path, set_type=2,device=device)
+
+            _, hist = train_single_imcnn(
+                None,
+                n_epochs=epochs,
+                logging_dir=f"{logging_dir}/imcnn_{method_name}_trial_{trial_idx}",
+                adapt_data=adaptation_data,
+                train_data=train_data,
+                val_data=val_data,
+                test_data=test_data,
+            )
+
+            results[method_name]["acc"].append(hist["test_accuracy"][-1])
+            results[method_name]["loss"].append(hist["test_loss"][-1])
+
+    # Perform Mann-Whitney U tests
+    comparisons = []
+    for method_name, _ in dataset_versions[2:]:  # Skip uncorrected and deepview
+        comparisons.append(("uncorrected", method_name))
+        comparisons.append(("deepview", method_name))
+
+    mwutest_file = f"{logging_dir}/mann_whitney_u_tests.txt"
+    with open(mwutest_file, "w") as f:
+        f.write("### WILCOXON RANK-SUM TEST COMPARISONS ###\n\n")
+
+        for base, comp in comparisons:
+            acc_stat, acc_p = sp.stats.ranksums(results[base]["acc"], results[comp]["acc"])
+            loss_stat, loss_p = sp.stats.ranksums(results[base]["loss"], results[comp]["loss"])
+
+            f.write(f"Comparing '{comp}' vs '{base}':\n")
+            f.write(f"  Test Accuracy: statistic = {acc_stat:.4f}, p-value = {acc_p:.4e}\n")
+            f.write(f"  Test Loss:     statistic = {loss_stat:.4f}, p-value = {loss_p:.4e}\n")
+            f.write("--------------------------------------------------\n")
+
+        f.write("\n### ACCURACY AND LOSS STATS ###\n")
+        for method_name in results:
+            accs = np.array(results[method_name]["acc"])
+            losses = np.array(results[method_name]["loss"])
+            f.write(f"\nMethod: {method_name}\n")
+            f.write(f"  Accuracy Mean ± Std: {accs.mean():.4f} ± {accs.std():.4f}\n")
+            f.write(f"  Loss Mean ± Std:     {losses.mean():.4f} ± {losses.std():.4f}\n")
+            f.write(f"  All Accuracies: {accs.tolist()}\n")
+            f.write(f"  All Losses: {losses.tolist()}\n")
+            f.write("--------------------------------------------------\n")
 
 
 def run_hypothesis_test(old_dataset_path,

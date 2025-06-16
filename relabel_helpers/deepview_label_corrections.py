@@ -55,12 +55,12 @@ class DeepViewLabelRevisit(DeepView):
         self.ax.legend()
 
 
-    def recommend_label_correction(self,percentage):
-        changed_labels, all_indices, keep_indices = recommend_KNN_based(self.samples, self.y_true,
-                                                                               self.background_at, 5,
+    def recommend_label_correction(self,k,percentage):
+        changed_labels, all_indices, keep_indices = recommend_KNN_based(self.embedded, self.y_true,
+                                                                               self.y_true, k,
                                                                                recommendation_percentage=percentage)
         self.changed_indices = keep_indices
-        return keep_indices
+        return keep_indices, changed_labels
 
     def show(self):
         '''
