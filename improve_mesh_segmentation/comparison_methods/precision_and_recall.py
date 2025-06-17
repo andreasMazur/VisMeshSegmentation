@@ -65,13 +65,14 @@ def compute_tps(noisy_labels, corrections, gt_corrections):
     return true_positives
 
 
-def compute_correction_precision_and_recall(noisy_labels, corrections, gt_corrections):
+def compute_correction_precision_and_recall_and_f1(noisy_labels, corrections, gt_corrections):
     """Computes correction precision and recall of suggested corrections."""
     # Compute amount of true positives: Amount of correction suggestions that are correct
     true_positives = compute_tps(noisy_labels, corrections, gt_corrections)
 
     precision = true_positives / corrections.shape[0]
     recall = true_positives / gt_corrections.shape[0]
+    f1 = 2 / (1/precision + 1/recall)
 
     # Compute amount of corrections to be made
-    return precision, recall
+    return precision, recall, f1
