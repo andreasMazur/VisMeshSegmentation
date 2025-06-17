@@ -90,6 +90,8 @@ def incv(data_path, epochs, remove_ratio=0.1, max_iterations=10):
         The path to the noisy dataset.
     epochs: int
         The amount of epochs to train a network for.
+    remove_ratio: float
+        The remove ratio that determines how many samples with high loss values are removed.
     max_iterations: int
         The maximum number of iterations to run the INCV algorithm for.
     """
