@@ -15,6 +15,7 @@ class DeepViewLabelRevisit(DeepView):
     def __init__(self, *args, **kwargs):
         self.changed_indices = None
         super().__init__(*args, **kwargs)
+        self.mesh_preds = None
 
 
     def _init_plots(self):
@@ -62,6 +63,42 @@ class DeepViewLabelRevisit(DeepView):
         self.changed_indices = keep_indices
         return keep_indices, changed_labels
 
+
+    def compute_grid(self):
+        '''
+        Computes the visualisation of the decision boundaries.
+        '''
+        if self.verbose:
+            print('Computing decision regions ...')
+        # get extent of embedding
+        x_min, y_min, x_max, y_max = self._get_plot_measures()
+        # create grid
+        xs = np.linspace(x_min, x_max, self.resolution)
+        ys = np.linspace(y_min, y_max, self.resolution)
+        self.grid = np.array(np.meshgrid(xs, ys))
+        grid = np.swapaxes(self.grid.reshape(self.grid.shape[0], -1), 0, 1)
+
+        # map gridmpoint to images
+        grid_samples = self.inverse(grid)
+
+        mesh_preds = self._predict_batches(grid_samples)
+        mesh_preds = mesh_preds + 1e-8
+        self.mesh_preds = mesh_preds
+
+        self.mesh_classes = mesh_preds.argmax(axis=1)
+        mesh_max_class = max(self.mesh_classes)
+
+        # get color of gridpoints
+        color = self.cmap(self.mesh_classes / mesh_max_class)
+        # scale colors by certainty
+        h = -(mesh_preds * np.log(mesh_preds)).sum(axis=1) / np.log(self.n_classes)
+        h = (h / h.max()).reshape(-1, 1)
+        # adjust brightness
+        h = np.clip(h * 1.2, 0, 1)
+        color = color[:, 0:3]
+        color = (1 - h) * (0.5 * color) + h * np.ones(color.shape, dtype=np.uint8)
+        decision_view = color.reshape(self.resolution, self.resolution, 3)
+        return decision_view
     def show(self):
         '''
         Shows the current plot.

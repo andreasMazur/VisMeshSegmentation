@@ -1,6 +1,9 @@
+import os
 from collections import Counter
 
 import torch
+from sklearn.model_selection import KFold
+import json
 
 from relabel_helpers.helper_functions import write_label_changes
 from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset, processed_partnet_grasp_generator
@@ -26,13 +29,17 @@ def cv_model_pred(signal, bc, labels, voting="majority", percentage_misclass=0.5
            final_preds: (num_points,) numpy array of predicted labels
            misclassified_idxs: list of indices based on voting strategy
        """
-    models_path = "/run_through/logs/cv/"
-    model_dirs = ['model_cv_0', 'model_cv_1', 'model_cv_2', 'model_cv_3', 'model_cv_4', 'model_cv_5', 'model_cv_6']
+    # models_path = "/run_through/logs/cv/"
+    # model_dirs = ['model_cv_0', 'model_cv_1', 'model_cv_2', 'model_cv_3', 'model_cv_4', 'model_cv_5', 'model_cv_6']
+
+    models_path = "/home/iroberts/projects/VisMeshSegmentation/run_through/logs/behanvior_exp/cv/"
+    model_dirs = ['model_cv_0', 'model_cv_1', 'model_cv_2', 'model_cv_3', 'model_cv_4', 'model_cv_5', 'model_cv_6','model_cv_7', 'model_cv_8', 'model_cv_9']
+
     num_models = len(model_dirs)
     cv_preds = []
 
     for model_file in model_dirs:
-        imcnn = SegImcnn(adapt_data=PartNetGraspDataset(PARTNET_GRASP, set_type=0, only_signal=True))
+        imcnn = SegImcnn(adapt_data=PartNetGraspDataset(PARTNET_GRASP, set_type=3, only_signal=True))
         imcnn.load_state_dict(torch.load(models_path + model_file + "/model.zip"))
         preds = imcnn([signal, bc]).detach().cpu().numpy()  # (num_points, num_classes)
         cv_preds.append(np.argmax(preds, axis=1))
@@ -106,27 +113,30 @@ def randomly_ranked_mesh_changes(mesh_changes_dict, seed=None):
     return ranked_changes
 
 
-LOGGING_DIR = f"{EXPERIMENT_DIRECTORY}/logs/cv/"
+# LOGGING_DIR = f"{EXPERIMENT_DIRECTORY}/logs/cv/"
 PARTNET_GRASP = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp.zip"
 if __name__ == "__main__":
-    # models_path = "/home/iroberts/projects/VisMeshSegmentation/run_through/logs/cv/"
-    # model_dirs = ['model_cv_0', 'model_cv_1', 'model_cv_2', 'model_cv_3', 'model_cv_4', 'model_cv_5', 'model_cv_6']
-    # X = np.arange(70)
-    # cv = KFold(n_splits=7)
+    # models_path = "/home/iroberts/projects/VisMeshSegmentation/run_through/logs/behanvior_exp/cv/"
+    # model_dirs = ['model_cv_0', 'model_cv_1', 'model_cv_2', 'model_cv_3', 'model_cv_4', 'model_cv_5', 'model_cv_6','model_cv_7', 'model_cv_8', 'model_cv_9']
+    # X = np.arange(100)
+    # cv = KFold(n_splits=10)
     # cv_pred_dict = []
     # for i, ((train_idxs,test_idxs), model_file) in enumerate(zip(cv.split(X),model_dirs)):
-    #     imcnn = SegImcnn(adapt_data=PartNetGraspDataset(PARTNET_GRASP, set_type=0, only_signal=True))
+    #     imcnn = SegImcnn(adapt_data=PartNetGraspDataset(PARTNET_GRASP, set_type=3, only_signal=True))
     #     imcnn.load_state_dict(torch.load(models_path+model_file+ "/model.zip"))
-    #     test_dataset = list(processed_partnet_grasp_generator(PARTNET_GRASP, set_type=0,set_indices=test_idxs ))
+    #     test_dataset = list(processed_partnet_grasp_generator(PARTNET_GRASP, set_type=3,set_indices=test_idxs ))
     #     for mesh_idx,((signal, bc), og_labels) in zip(test_idxs,test_dataset):
     #         preds = imcnn([signal,bc]).detach().cpu().numpy().tolist()
     #         cv_pred_dict.append({
     #             "mesh_idx": mesh_idx.item(),
     #             "preds": preds,
     #         })
-    path_to_corrections = "/run_through/corrections/"
-
-    dataset = list(processed_partnet_grasp_generator(PARTNET_GRASP, set_type=0))
+    #
+    # with open("/home/iroberts/projects/VisMeshSegmentation/run_through/logs/behanvior_exp/cv/cv_out_of_sample_preds.json", "w") as f:
+    #     json.dump(cv_pred_dict, f)
+    path_to_corrections = "/home/iroberts/projects/VisMeshSegmentation/run_through/corrections/behavior_exp/"
+    #
+    dataset = list(processed_partnet_grasp_generator(PARTNET_GRASP, set_type=3))
     cv_preds = []
     mesh_preds_dict = {}
     mesh_changes_dict = {}
@@ -136,17 +146,21 @@ if __name__ == "__main__":
         mesh_changes_dict[mesh_idx] = points_to_change
 
     ranked_list = randomly_ranked_mesh_changes(mesh_changes_dict, seed=42)
+    os.mkdir(path_to_corrections + "ensemble_majority_baseline")
+    file_name = "ensemble_majority_baseline" + "/ensemble_majority_baseline" + ".csv"
+    points_to_change = ranked_list[:9092]
+    write_label_changes(path_to_corrections + file_name, points_to_change, mesh_preds_dict)
 
-    for i in list(range(500, 9500, 500)):
-        if i > len(ranked_list):
-            file_name = "cv_majority_baseline" + "/cv_majority_baseline_"  + str(i) + ".csv"
-            points_to_change = ranked_list[:len(ranked_list)]
-            write_label_changes(path_to_corrections + file_name, points_to_change, mesh_preds_dict)
-        else:
-
-            file_name = "cv_majority_baseline" + "/cv_majority_baseline_"  + str(i) + ".csv"
-            points_to_change = ranked_list[:i]
-            write_label_changes(path_to_corrections + file_name, points_to_change, mesh_preds_dict)
+    # for i in list(range(500, 9500, 500)):
+    #     if i > len(ranked_list):
+    #         file_name = "cv_majority_baseline" + "/cv_majority_baseline_"  + str(i) + ".csv"
+    #         points_to_change = ranked_list[:len(ranked_list)]
+    #         write_label_changes(path_to_corrections + file_name, points_to_change, mesh_preds_dict)
+    #     else:
+    #
+    #         file_name = "cv_majority_baseline" + "/cv_majority_baseline_"  + str(i) + ".csv"
+    #         points_to_change = ranked_list[:i]
+    #         write_label_changes(path_to_corrections + file_name, points_to_change, mesh_preds_dict)
     # write_label_changes(csv_file_path, ranked_list, mesh_preds)
 
 

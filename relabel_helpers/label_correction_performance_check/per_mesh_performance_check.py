@@ -8,8 +8,8 @@ from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset,
 
 
 
-og_data_path = "/improve_mesh_segmentation/datasets/partnet_grasp.zip"
-corrected_data_path = "/improve_mesh_segmentation/datasets/partnet_grasp_corrected.zip"
+og_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp.zip"
+corrected_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected.zip"
 # corrected_data_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp_corrected_deepviewbackground_100.zip"
 # method1_path = "/improve_mesh_segmentation/datasets/deepview_influence_sort_percentage/partnet_grasp_corrected_deepview_influence_background_100.zip"
 # method2_path = "/improve_mesh_segmentation/datasets/deepview_background_percentage/partnet_grasp_corrected_deepviewbackground_100.zip"
@@ -26,7 +26,7 @@ corrected_data_path = "/improve_mesh_segmentation/datasets/partnet_grasp_correct
                     #  "deepview_kmeans","global_kmeans","knn_100_corrections","global_dbscan"]
                     #"knn_30_corrections", "knn_5_corrections", "deepview_kmeans7","deepview_dbscan","global_knn_5", "global_knn_10", "global_knn_25", "global_knn_50",]
 
-datasets_path = "/improve_mesh_segmentation/datasets/"
+datasets_path = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/"
 
 
 if __name__ == "__main__":
@@ -38,8 +38,12 @@ if __name__ == "__main__":
     automated_methods = {
 
     }
-    dirs = ["global_knn_true" + str(j) for j in [5,10,25,50,100,250,500]]
+    # method_names =  ['iterative_kmeans','iterative_knn','deepview_kmeanstl','deepview_knn_bg','deepview_knn_t','confident_learning','cv_majority_baseline','global_lvq_4', 'global_knn_5000','global_knn_true500', 'misclassification_sorted_unc',]
+
+    # dirs = ["global_knn_true" + str(j) for j in [5,10,25,50,100,250,500]]
     # dirs = ["global_lvq_" + str(j) for j in list(range(1,11))]
+    dirs = ['random_baseline','iterative_kmeans','iterative_knn','iterative_knn1','deepview_kmeanstl','deepview_knn_bg','deepview_knn_t','confident_learning','cv_majority_baseline','global_lvq_4', 'global_knn_5000','global_knn_true500', 'misclassification_sorted_unc',]
+
     for dir in dirs:
         files = datasets_path + dir
         for file in os.listdir(files):
@@ -49,7 +53,7 @@ if __name__ == "__main__":
     #     automated_methods[str(file)] = list(processed_partnet_grasp_generator(inf_baseline + file, set_type=0))
 
     # key = method name, value = dict of lists for precision/recall/F1 of corrections
-    correction_agreement = defaultdict(lambda: {"precision": [], "recall": [], "f1": [], "no_of_changes":[]})
+    correction_agreement = defaultdict(lambda: {"precision": [], "recall": [], "f1": [], "no_of_changes":[],"oracle_changes":[]})
 
     # Loop through each method
     for method_name, auto_dataset in automated_methods.items():
@@ -73,6 +77,7 @@ if __name__ == "__main__":
             # Binary labels: 1 if correction, 0 if no change
             y_true = oracle_changed.astype(int)
             y_pred = auto_changed.astype(int)
+            # print("method name:", sum(y_true), sum(y_pred))
 
             # Metrics: did the automated method change the *same* labels?
             prec = precision_score(y_true, y_pred, zero_division=0)
@@ -84,6 +89,7 @@ if __name__ == "__main__":
             correction_agreement[method_name]["recall"].append(rec)
             correction_agreement[method_name]["f1"].append(f1)
             correction_agreement[method_name]["no_of_changes"].append(sum(y_pred))
+            correction_agreement[method_name]["oracle_changes"].append(sum(y_true))
 
 
     # Print summary
@@ -92,5 +98,7 @@ if __name__ == "__main__":
         for metric, values in metrics.items():
             if metric != "no_of_changes":
                 print(f"{metric.capitalize()}: Mean = {np.mean(values):.3f}, Std = {np.std(values):.3f}")
+            if metric == "oracle_changes":
+                print(f"{metric.capitalize()}: sum = {np.sum(values):.3f}")
             else:
                 print(f"{metric.capitalize()}: sum = {np.sum(values):.3f}")

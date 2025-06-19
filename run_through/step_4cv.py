@@ -13,14 +13,17 @@ import numpy as np
 """
 
 
-LOGGING_DIR = f"{EXPERIMENT_DIRECTORY}/logs/cv/"
+LOGGING_DIR = f"{EXPERIMENT_DIRECTORY}/logs/behanvior_exp/cv/"
 PARTNET_GRASP = "/home/iroberts/projects/VisMeshSegmentation/improve_mesh_segmentation/datasets/partnet_grasp.zip"
 if __name__ == "__main__":
-    train_imcnn_cv(
-        data_path=PARTNET_GRASP,
-        n_epochs=10,
-        logging_dir=LOGGING_DIR,
-        skip_validation=True,
-        skip_testing=False,
-        verbose=True
-    )
+    folds = [2,4,5]
+    for fold in folds:
+        train_imcnn_cv(
+            data_path=PARTNET_GRASP,
+            n_epochs=10,
+            K = fold,
+            logging_dir=LOGGING_DIR+f"{fold}_fold_cv",
+            skip_validation=True,
+            skip_testing=False,
+            verbose=True
+        )

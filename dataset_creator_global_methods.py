@@ -1,7 +1,7 @@
 import json
 import os
 
-from relabel_helpers.comparison_methods.filter_methods import knn_label_correction
+from relabel_helpers.comparison_methods.filter_methods import knn_label_correction, lvq_label_correction, kmeans_label_correction, supervised_kmeans_label_correction, dbscan_label_correction
 from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset, processed_partnet_grasp_generator
 from improve_mesh_segmentation.data_correction.correct_sub_partnet import embed
 from improve_mesh_segmentation.training.imcnn import SegImcnn
@@ -188,44 +188,29 @@ if __name__ == "__main__":
     imcnn.load_state_dict(torch.load(model_path))
     classification_head = imcnn.model.output_dense
 
-    with open('cv_out_of_sample_preds.json', 'r') as f:
-        cv_preds = json.load(f)
-
-    # Convert to a dictionary for quick mesh_idx lookup
-    cv_pred_dict = {entry['mesh_idx']: entry['preds'] for entry in cv_preds}
+    # with open('cv_out_of_sample_preds.json', 'r') as f:
+    #     cv_preds = json.load(f)
+    #
+    # # Convert to a dictionary for quick mesh_idx lookup
+    # cv_pred_dict = {entry['mesh_idx']: entry['preds'] for entry in cv_preds}
 
     # for i in range(0,70,20):
     embs, labels, preds, map,pred_dict, g_unc_dict = get_embeddings_labels_preds_with_idx_map(og_dataset, imcnn, classification_head,
                                                                             range(0, 70))
-    all_preds = []
-    for key in cv_pred_dict.keys():
-        all_preds.append(np.argmax(cv_pred_dict[key],axis=1))
-    cv_all_preds = np.concatenate(all_preds, axis=0)
-    # ks = list(range(1,11))
-    # for k in ks:
-    #     idxs,unc_dict,new_labels = lvq_label_correction(embs, labels, preds, map, g_unc_dict,k)
+    # all_preds = []
+    # for key in cv_pred_dict.keys():
+    #     all_preds.append(np.argmax(cv_pred_dict[key],axis=1))
+    # cv_all_preds = np.concatenate(all_preds, axis=0)
     #
-    #     # idxs, unc_dict, new_labels = dbscan_label_correction(embs, labels, preds, map, unc_dict)
-    #     sorted_by_unc, not_sorted_by_unc = global_mesh_sort(idxs,unc_dict)
 
-        # path_to_corrections = "/home/iroberts/projects/VisMeshSegmentation/run_through/corrections/"
-        # os.mkdir(path_to_corrections + "global_lvq_" + str(k))
-        # for i in list(range(500,9500,500)):
-        #     if i > len(sorted_by_unc):
-        #         file_name = "global_lvq_" + str(k)+ "/global_lvq_"+ str(k)+ "_" + str(i) + ".csv"
-        #         points_to_change = sorted_by_unc[:len(sorted_by_unc)]
-        #         write_label_changes(path_to_corrections + file_name, points_to_change, new_labels)
-        #
-        #     else:
-        #         file_name = "global_lvq_" + str(k)+ "/global_lvq_"+ str(k)+ "_" + str(i) + ".csv"
-        #         points_to_change = sorted_by_unc[:i]
-        #         write_label_changes(path_to_corrections + file_name, points_to_change, new_labels)
-
-    ks = [5,10,25,50,100,250,500,1000]
+    ks = [5,10,25,50,100,250,500,1000,2000.3000,4000,5000,]
     for k in ks:
-        idxs,unc_dict,new_labels = knn_label_correction(embs, labels, cv_all_preds, map, g_unc_dict,k)
+        idxs,unc_dict,new_labels = knn_label_correction(embs, labels, preds, map, g_unc_dict,k)
 
         # idxs, unc_dict, new_labels = dbscan_label_correction(embs, labels, preds, map, unc_dict)
+        # idxs, unc_dict, new_labels = lvq_label_correction(embs, labels, preds, map, g_unc_dict, k)
+        # idxs, unc_dict, new_labels = kmeans_label_correction(embs, labels, preds, map, g_unc_dict)
+        # idxs, unc_dict, new_labels = supervised_kmeans_label_correction(embs, labels, preds, map, g_unc_dict)
         sorted_by_unc, not_sorted_by_unc = global_mesh_sort(idxs,unc_dict)
 
         path_to_corrections = "/home/iroberts/projects/VisMeshSegmentation/run_through/corrections/"

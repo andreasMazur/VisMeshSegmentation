@@ -106,16 +106,16 @@ def sigmoid(z):
     return 1/(1 + np.exp(-z))
 
 if __name__ == "__main__":
-    og_dataset = list(processed_partnet_grasp_generator(og_data_path, set_type=0))
+    og_dataset = list(processed_partnet_grasp_generator(og_data_path, set_type=3))
 
-    imcnn = SegImcnn(adapt_data=PartNetGraspDataset(og_data_path, set_type=0, only_signal=True))
+    imcnn = SegImcnn(adapt_data=PartNetGraspDataset(og_data_path, set_type=3, only_signal=True))
     imcnn.load_state_dict(torch.load(model_path))
     classification_head = imcnn.model.output_dense
 
     # embs, labels, preds, map, pred_dict, g_unc_dict = get_embeddings_labels_preds_with_idx_map(og_dataset, imcnn,
     #                                                                                            classification_head,
     #                                                                                            range(0, 70))
-    with open('/home/iroberts/projects/VisMeshSegmentation/cv_out_of_sample_preds.json', 'r') as f:
+    with open('/home/iroberts/projects/VisMeshSegmentation/run_through/logs/behanvior_exp/cv/cv_out_of_sample_preds.json', 'r') as f:
         cv_preds = json.load(f)
 
     # Convert to a dictionary for quick mesh_idx lookup
@@ -123,7 +123,7 @@ if __name__ == "__main__":
 
     # for i in range(0,70,20):
     embs, labels, preds, map, pred_dict, g_unc_dict = get_embeddings_labels_preds_with_idx_map(og_dataset, imcnn, classification_head,
-                                                                            range(0, 70))
+                                                                            range(0, 100))
     all_preds = []
     for key in cv_pred_dict.keys():
         all_preds.append(cv_pred_dict[key])
@@ -166,18 +166,24 @@ if __name__ == "__main__":
 
     sorted_by_unc, not_sorted_by_unc = global_mesh_sort(result, changed_idx_unc)
 
-    path_to_corrections = "/home/iroberts/projects/VisMeshSegmentation/run_through/corrections/"
-    os.mkdir(path_to_corrections + "confident_learning_")
-    for i in list(range(500, 9500, 500)):
-        if i > len(sorted_by_unc):
-            file_name = "confident_learning_"+ "/confident_learning_"+ str(i) + ".csv"
-            points_to_change = sorted_by_unc[:len(sorted_by_unc)]
-            write_label_changes(path_to_corrections + file_name, points_to_change, new_labels)
-        else:
+    path_to_corrections = "/home/iroberts/projects/VisMeshSegmentation/run_through/corrections/behavior_exp/"
+    os.mkdir(path_to_corrections + "confident_learning")
+    file_name = "confident_learning" + "/confident_learning" + ".csv"
+    points_to_change = sorted_by_unc[:9092]
+    write_label_changes(path_to_corrections + file_name, points_to_change, new_labels)
 
-            file_name = "confident_learning_" + "/confident_learning_"+ str(i) + ".csv"
-            points_to_change = sorted_by_unc[:i]
-            write_label_changes(path_to_corrections + file_name, points_to_change, new_labels)
+
+    # os.mkdir(path_to_corrections + "confident_learning_")
+    # for i in list(range(500, 9500, 500)):
+    #     if i > len(sorted_by_unc):
+    #         file_name = "confident_learning_"+ "/confident_learning_"+ str(i) + ".csv"
+    #         points_to_change = sorted_by_unc[:len(sorted_by_unc)]
+    #         write_label_changes(path_to_corrections + file_name, points_to_change, new_labels)
+    #     else:
+    #
+    #         file_name = "confident_learning_" + "/confident_learning_"+ str(i) + ".csv"
+    #         points_to_change = sorted_by_unc[:i]
+    #         write_label_changes(path_to_corrections + file_name, points_to_change, new_labels)
 
     # # cleanlab works with **any classifier**. Yup, you can use PyTorch/TensorFlow/OpenAI/XGBoost/etc.
     # cl = cleanlab.classification.CleanLearning(classification_head)

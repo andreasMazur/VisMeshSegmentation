@@ -73,12 +73,12 @@ if __name__ == "__main__":
         labels = np.array(labels)
         embeddings = embed(imcnn, [signal, bc])
         embeddings = torch.tensor(embeddings)
-        preds = np.argmax(classification_head(embeddings).detach().numpy(), axis=1)
+        preds = classification_head(embeddings).detach().numpy()
         # idxs,unc, new_labels  = deepview_knn(pred_wrapper, embeddings, labels, stochastic_model,mesh_idx)
-        idxs, unc, new_labels = _knn(embeddings, labels,stochastic_model)
+        # idxs, unc, new_labels = _knn(embeddings, labels,stochastic_model)
 
-        # idxs, unc, new_labels = deepview_kmeans(pred_wrapper, embeddings, labels, preds, stochastic_model)
-        # idxs, unc, new_labels = deepview_dbscan(pred_wrapper, embeddings, labels, preds, stochastic_model)
+        # idxs, unc, new_labels = deepview_kmeans_bg(pred_wrapper, embeddings, labels, preds, stochastic_model)
+        idxs, unc, new_labels = deepview_dbscan(pred_wrapper, embeddings, labels, preds, stochastic_model)
         # idxs, unc = _lvq(embeddings, labels,preds, stochastic_model)
         # print("Rand with bad labels:" + str(rand_score(labels,idxs)) + " \nADJ Rand with bad labels:" + str(adjusted_rand_score(labels,idxs)))
         # print("Rand with good labels:" + str(rand_score(cor_labels, idxs)) + " \nADJ Rand with good labels :" + str(
@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
     path_to_corrections = "/home/iroberts/projects/VisMeshSegmentation/run_through/corrections/"
 
-    os.mkdir(path_to_corrections + "iterative_knn")
+    os.mkdir(path_to_corrections + "deepview_dbscan")
     sorted_by_unc, not_sorted_by_unc = global_mesh_sort(mesh_indices, mesh_value1)
     # sorted_by_inf, not_sorted_by_inf = global_mesh_sort(mesh_indices, mesh_value2,descending=True)
     for k in list(range(500,9500,500)):
@@ -107,7 +107,7 @@ if __name__ == "__main__":
             # points_to_change = sorted_by_unc[:len(sorted_by_unc)]
             # write_label_changes(path_to_corrections + file_name, points_to_change, mesh_preds)
 
-            file_name = "iterative_knn/iterative_knn_" + str(k) + ".csv"
+            file_name = "deepview_dbscan/deepview_dbscan_" + str(k) + ".csv"
             points_to_change = sorted_by_unc[:len(sorted_by_unc)]
             write_label_changes(path_to_corrections + file_name, points_to_change, mesh_labels)
 
@@ -145,7 +145,7 @@ if __name__ == "__main__":
             # points_to_change = sorted_by_unc[:k]
             # write_label_changes(path_to_corrections + file_name, points_to_change, mesh_preds)
 
-            file_name = "iterative_knn/iterative_knn_" + str(k) + ".csv"
+            file_name = "deepview_dbscan/deepview_dbscan_" + str(k) + ".csv"
             points_to_change = sorted_by_unc[:k]
             write_label_changes(path_to_corrections + file_name, points_to_change, mesh_labels)
 

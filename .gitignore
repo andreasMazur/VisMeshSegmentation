@@ -2,6 +2,8 @@ test_scripts/
 logs/
 datasets/
 run_through/temp_meshes/
+run_through/corrections/
+run_through/generalization_experiment_logs/
 
 ### PyCharm ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider

@@ -53,13 +53,13 @@ def run_extended_hypothesis_test(
 
     # Prepare dataset paths
     old_dataset_zip = f"{old_dataset_path}.zip"
-    dataset_versions = [("uncorrected", old_dataset_zip)]
-
+    # dataset_versions = [("uncorrected", old_dataset_zip)]
+    dataset_versions=[]
     # Add DeepView-corrected
     deepview_dataset_path = f"{data_dir}/partnet_grasp_corrected.zip"
     if not Path(deepview_dataset_path).is_file():
         convert_partnet(old_dataset_path, deepview_dataset_path, deepview_csv_path)
-    dataset_versions.append(("deepview", deepview_dataset_path))
+    # dataset_versions.append(("deepview", deepview_dataset_path))
 
     # Add other correction methods
     for method_name, csv_path in correction_methods:

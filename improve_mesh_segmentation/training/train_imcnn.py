@@ -12,6 +12,7 @@ import torch
 
 def train_imcnn_cv(data_path,
                        n_epochs,
+                        K=10,
                        logging_dir=None,
                        adapt_data=None,
                        train_data=None,
@@ -46,13 +47,13 @@ def train_imcnn_cv(data_path,
     verbose: bool
         Whether to print intermediate training information to the console.
     """
-    X = np.arange(70)
-    cv = KFold(n_splits=7)
+    X = np.arange(100)
+    cv = KFold(n_splits=K)
     for i, (train_idxs, test_idxs) in enumerate(cv.split(X)):
 
 
         model = SegImcnn(
-            adapt_data=PartNetGraspDataset(data_path,set_type=0, only_signal=True, set_indices=train_idxs) if adapt_data is None else adapt_data
+            adapt_data=PartNetGraspDataset(data_path,set_type=3, only_signal=True, set_indices=train_idxs) if adapt_data is None else adapt_data
         )
         train_hist = {
             "train_loss": [],
@@ -71,7 +72,7 @@ def train_imcnn_cv(data_path,
 
             # Training
             epoch_train_hist = model.train_loop(
-                dataset=PartNetGraspDataset(set_type=0, path_to_zip=data_path) if train_data is None else train_data,
+                dataset=PartNetGraspDataset(set_type=3, path_to_zip=data_path,set_indices=train_idxs) ,
                 loss_fn=nn.CrossEntropyLoss(),
                 optimizer=torch.optim.Adam(model.parameters()),
                 verbose=True,
@@ -93,7 +94,7 @@ def train_imcnn_cv(data_path,
         # Testing
         if not skip_testing:
             epoch_test_hist = model.validation_loop(
-                dataset=PartNetGraspDataset(set_type=0, set_indices=test_idxs, path_to_zip=data_path) if test_data is None else test_data,
+                dataset=PartNetGraspDataset(set_type=3, set_indices=test_idxs, path_to_zip=data_path),
                 loss_fn=nn.CrossEntropyLoss(),
                 verbose=False
             )
