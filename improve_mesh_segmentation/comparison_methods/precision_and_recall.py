@@ -36,6 +36,8 @@ def filter_deepview_corrections(corrections, noisy_labels, filename=None):
     for idx, cor_suggestion in tqdm(enumerate(corrections), postfix="Filtering DV corrections..."):
         # Get last/latest correction suggestion
         cor_suggestion = corrections[(cor_suggestion[:2] == corrections[:, :2]).all(axis=-1)][-1]
+
+        # Check if the correction suggestion is already in the list of unique corrections
         if len(unique_cors) > 0 and (cor_suggestion[:2] == np.array(unique_cors)[:, :2]).all(axis=-1).any():
             continue
 
