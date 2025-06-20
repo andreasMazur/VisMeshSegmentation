@@ -3,6 +3,7 @@ from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset
 from tqdm import tqdm
 
 import numpy as np
+import pandas as pd
 import json
 
 
@@ -30,10 +31,10 @@ def load_dv_corrections(path_to_dv_corrections):
     return np.loadtxt(path_to_dv_corrections, delimiter=",", dtype=np.int32)
 
 
-def filter_deepview_corrections(corrections, noisy_labels, filename=None):
-    """Filters deepview corrections to the latest corrections."""
+def uniquify_corrections(corrections, noisy_labels, filename=None):
+    """Filters corrections to the latest corrections and checks that they actually change a label."""
     unique_cors = []
-    for idx, cor_suggestion in tqdm(enumerate(corrections), postfix="Filtering DV corrections..."):
+    for idx, cor_suggestion in tqdm(enumerate(corrections), postfix="Uniquify corrections..."):
         # Get last/latest correction suggestion
         cor_suggestion = corrections[(cor_suggestion[:2] == corrections[:, :2]).all(axis=-1)][-1]
 
@@ -101,8 +102,26 @@ def evaluated_correction_prf_wrapper(original_triples, unique_dv_corrections, co
     result_dict = {}
     for file_path in correction_files:
         # Load all corrections: (n_corrections, 2)
-        method_corrections = np.load(file_path)
-        method_corrections = method_corrections
+        if file_path[-3:] == "csv":
+            method_corrections = pd.read_csv(file_path, header=None).to_numpy()
+        elif file_path[-3:] == "npy":
+            method_corrections = np.load(file_path)
+        else:
+            raise ValueError(
+                f"File {file_path} is not a valid correction file. Only *.npy and *.csv files are supported."
+            )
+        if method_corrections.shape[1] > 2:
+            # Check unique corrections
+            print(f"\nBefore uniquification, method corrections shape: {method_corrections.shape}")
+            method_corrections = uniquify_corrections(
+                corrections=method_corrections,
+                noisy_labels=original_triples,
+                filename=None
+            )
+            print(f"\nAfter uniquification, method corrections shape: {method_corrections.shape}")
+            # If the method corrections contain labels, remove them
+            method_corrections = method_corrections[:, :2]
+
         precision, recall, f1 = compute_correction_precision_and_recall_and_f1(
             noisy_labels=original_triples,
             corrections=method_corrections,
@@ -114,6 +133,6 @@ def evaluated_correction_prf_wrapper(original_triples, unique_dv_corrections, co
             "f1": f1,
             "amount_corrections": method_corrections.shape[0]
         }
-        with open(f"./{result_filename}", "w") as f:
+        with open(result_filename, "w") as f:
             json.dump(result_dict, f, indent=4)
         print("\n", file_path, precision, recall, f1)
