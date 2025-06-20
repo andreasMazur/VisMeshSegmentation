@@ -98,23 +98,20 @@ def evaluated_correction_prf_wrapper(original_triples, unique_dv_corrections, co
     """
     result_dict = {}
     for file_path in correction_files:
-        for n_corrections in [i * 500 for i in range(1, 20)]:
-            # Load all corrections: (n_corrections, 2)
-            method_corrections = np.load(file_path)
-            if method_corrections.shape[0] >= n_corrections:
-                # Analyse the first 'n_corrections'
-                method_corrections = method_corrections[:n_corrections]
-                precision, recall, f1 = compute_correction_precision_and_recall_and_f1(
-                    noisy_labels=original_triples,
-                    corrections=method_corrections,
-                    gt_corrections=unique_dv_corrections
-                )
-                result_dict[f"{file_path}_{n_corrections}"] = {
-                    "precision": precision,
-                    "recall": recall,
-                    "f1": f1
-                }
-                with open(f"./{result_filename}", "w") as f:
-                    json.dump(result_dict, f, indent=4)
-
-                print("\n", file_path, n_corrections, precision, recall, f1)
+        # Load all corrections: (n_corrections, 2)
+        method_corrections = np.load(file_path)
+        method_corrections = method_corrections
+        precision, recall, f1 = compute_correction_precision_and_recall_and_f1(
+            noisy_labels=original_triples,
+            corrections=method_corrections,
+            gt_corrections=unique_dv_corrections
+        )
+        result_dict[f"{file_path}"] = {
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+            "amount_corrections": method_corrections.shape[0]
+        }
+        with open(f"./{result_filename}", "w") as f:
+            json.dump(result_dict, f, indent=4)
+        print("\n", file_path, precision, recall, f1)
