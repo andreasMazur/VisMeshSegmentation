@@ -21,10 +21,10 @@ def run_hypothesis_test(old_dataset_path,
     ----------
     old_dataset_path: str
         The path to the originally pre-processed FAUST dataset
-    csv_path: str
-        The path to the CSV-file that contains the DeepView-corrections
     new_dataset_path: str
         The path to the DeepView-corrected dataset
+    csv_path: str
+        The path to the CSV-file that contains the DeepView-corrections
     logging_dir: str
         The path to the logging directory
     trials: int
@@ -37,15 +37,15 @@ def run_hypothesis_test(old_dataset_path,
         os.makedirs(logging_dir)
 
     # Integrate DeepView-corrected labels into the dataset
-    new_dataset_path = f"{new_dataset_path}.zip"
     if not Path(new_dataset_path).is_file():
         convert_partnet(old_data_path=old_dataset_path, new_data_path=new_dataset_path, csv_path=csv_path)
     else:
         print(f"Found converted dataset file: '{new_dataset_path}'. Skipping preprocessing.")
+    new_dataset_path = f"{new_dataset_path}.zip"
     old_dataset_path = f"{old_dataset_path}.zip"
 
     # Start training runs
-    test_accuracies, test_losses, sub_logging_dirs = [[], []], [[], []], ["bbox_approach", "deepview_approach"]
+    test_accuracies, test_losses = [[], []], [[], []]
     for idx, zip_file in enumerate([old_dataset_path, new_dataset_path]):
         # Train, validate and test IMCNN
         for trial_idx in range(trials):
