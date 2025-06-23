@@ -55,7 +55,7 @@ def run_hypothesis_test(old_dataset_path,
 
         # Train, validate and test IMCNN
         for trial_idx in range(trials):
-            print(f"Using un-corrected data: {idx == 0} | Using corrected data: {idx == 1} | Trial {trial_idx}")
+            print(f"\nUsing un-corrected data: {idx == 0} | Using corrected data: {idx == 1} | Trial {trial_idx}")
             adaptation_data = PartNetGraspDataset(zip_file, set_type=0, only_signal=True)
             train_data = PartNetGraspDataset(zip_file, set_type=0)
             val_data = PartNetGraspDataset(clean_data_path, set_type=1)  # Use human-expert corrected to validate
