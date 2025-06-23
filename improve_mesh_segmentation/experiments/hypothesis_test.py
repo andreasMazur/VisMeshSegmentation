@@ -14,7 +14,8 @@ def run_hypothesis_test(old_dataset_path,
                         csv_path,
                         logging_dir,
                         trials=30,
-                        epochs=10):
+                        epochs=10,
+                        clean_data_path=None):
     """Creates the datasets and starts the training runs.
 
     Parameters
@@ -31,6 +32,8 @@ def run_hypothesis_test(old_dataset_path,
         The amount of trials (i.e. amount of training runs for each corrected and uncorrected sub-experiment)
     epochs: int
         The amount of epochs per trial
+    clean_data_path: str | None
+        The path to a dataset that is considered "clean" and can be used to evaluate test performance.
     """
     # Create logging dir
     if not os.path.exists(logging_dir):
@@ -47,13 +50,16 @@ def run_hypothesis_test(old_dataset_path,
     # Start training runs
     test_accuracies, test_losses = [[], []], [[], []]
     for idx, zip_file in enumerate([old_dataset_path, new_dataset_path]):
+        if clean_data_path is not None:
+            clean_data_path = new_dataset_path
+
         # Train, validate and test IMCNN
         for trial_idx in range(trials):
             print(f"Using un-corrected data: {idx == 0} | Using corrected data: {idx == 1} | Trial {trial_idx}")
             adaptation_data = PartNetGraspDataset(zip_file, set_type=0, only_signal=True)
             train_data = PartNetGraspDataset(zip_file, set_type=0)
-            val_data = PartNetGraspDataset(new_dataset_path, set_type=1)  # Use corrected partnet_grasp to validate
-            test_data = PartNetGraspDataset(new_dataset_path, set_type=2)  # Use corrected partnet_grasp to test
+            val_data = PartNetGraspDataset(clean_data_path, set_type=1)  # Use human-expert corrected to validate
+            test_data = PartNetGraspDataset(clean_data_path, set_type=2)  # Use human-expert corrected to test
 
             _, hist = train_single_imcnn(
                 None,
