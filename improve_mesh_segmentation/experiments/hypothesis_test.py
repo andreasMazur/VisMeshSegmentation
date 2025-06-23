@@ -7,6 +7,7 @@ from pathlib import Path
 import os
 import scipy as sp
 import numpy as np
+import torch
 
 
 def run_hypothesis_test(old_dataset_path,
@@ -35,6 +36,8 @@ def run_hypothesis_test(old_dataset_path,
     clean_data_path: str | None
         The path to a dataset that is considered "clean" and can be used to evaluate test performance.
     """
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
     # Create logging dir
     if not os.path.exists(logging_dir):
         os.makedirs(logging_dir)
@@ -56,14 +59,15 @@ def run_hypothesis_test(old_dataset_path,
         # Train, validate and test IMCNN
         for trial_idx in range(trials):
             print(f"\nUsing un-corrected data: {idx == 0} | Using corrected data: {idx == 1} | Trial {trial_idx}")
-            adaptation_data = PartNetGraspDataset(zip_file, set_type=0, only_signal=True)
-            train_data = PartNetGraspDataset(zip_file, set_type=0)
-            val_data = PartNetGraspDataset(clean_data_path, set_type=1)  # Use human-expert corrected to validate
-            test_data = PartNetGraspDataset(clean_data_path, set_type=2)  # Use human-expert corrected to test
+            adaptation_data = PartNetGraspDataset(zip_file, set_type=0, only_signal=True, device=device)
+            train_data = PartNetGraspDataset(zip_file, set_type=0, device=device)
+            val_data = PartNetGraspDataset(clean_data_path, set_type=1, device=device)  # Use human-expert corrected to validate
+            test_data = PartNetGraspDataset(clean_data_path, set_type=2, device=device)  # Use human-expert corrected to test
 
             _, hist = train_single_imcnn(
                 None,
                 n_epochs=epochs,
+                device=device,
                 logging_dir=f"{logging_dir}/imcnn_OldNew_{idx}_trial_{trial_idx}",
                 adapt_data=adaptation_data,
                 train_data=train_data,

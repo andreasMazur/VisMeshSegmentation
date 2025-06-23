@@ -9,6 +9,7 @@ import torch
 
 def train_single_imcnn(data_path,
                        n_epochs,
+                       device,
                        logging_dir=None,
                        adapt_data=None,
                        train_data=None,
@@ -25,6 +26,8 @@ def train_single_imcnn(data_path,
         The path to the preprocessed PartNet dataset zip-file.
     n_epochs: int
         The amount of epochs for which the model shall be trained for.
+    device: str
+        The device on which the model shall be trained. Either "cpu" or "cuda".
     logging_dir: str
         The logging directory for the training.
     adapt_data: PartNetGraspDataset
@@ -44,8 +47,13 @@ def train_single_imcnn(data_path,
         Whether to print intermediate training information to the console.
     """
     model = SegImcnn(
-        adapt_data=PartNetGraspDataset(data_path, set_type=0, only_signal=True) if adapt_data is None else adapt_data
-    )
+        adapt_data=PartNetGraspDataset(
+            data_path,
+            set_type=0,
+            only_signal=True,
+            device=device
+        ) if adapt_data is None else adapt_data
+    ).to(device)
     train_hist = {
         "train_loss": [],
         "train_accuracy": [],
@@ -63,7 +71,11 @@ def train_single_imcnn(data_path,
 
         # Training
         epoch_train_hist = model.train_loop(
-            dataset=PartNetGraspDataset(set_type=0, path_to_zip=data_path) if train_data is None else train_data,
+            dataset=PartNetGraspDataset(
+                set_type=0,
+                path_to_zip=data_path,
+                device=device
+            ) if train_data is None else train_data,
             loss_fn=nn.CrossEntropyLoss(),
             optimizer=torch.optim.Adam(model.parameters()),
             verbose=True,
@@ -75,7 +87,11 @@ def train_single_imcnn(data_path,
         # Validation
         if not skip_validation:
             epoch_val_hist = model.validation_loop(
-                dataset=PartNetGraspDataset(set_type=1, path_to_zip=data_path) if val_data is None else val_data,
+                dataset=PartNetGraspDataset(
+                    set_type=1,
+                    path_to_zip=data_path,
+                    device=device
+                ) if val_data is None else val_data,
                 loss_fn=nn.CrossEntropyLoss(),
                 verbose=True
             )
@@ -85,7 +101,11 @@ def train_single_imcnn(data_path,
     # Testing
     if not skip_testing:
         epoch_test_hist = model.validation_loop(
-            dataset=PartNetGraspDataset(set_type=2, path_to_zip=data_path) if test_data is None else test_data,
+            dataset=PartNetGraspDataset(
+                set_type=2,
+                path_to_zip=data_path,
+                device=device
+            ) if test_data is None else test_data,
             loss_fn=nn.CrossEntropyLoss(),
             verbose=False
         )
@@ -98,7 +118,7 @@ def train_single_imcnn(data_path,
     return model, train_hist
 
 
-def train_n_imcnns(n, data_path, n_epochs, logging_dir=None, verbose=False):
+def train_n_imcnns(n, data_path, n_epochs, device, logging_dir=None, verbose=False):
     """Train 'n' IMCNNs on PartNet-Grasp.
 
     Parameters
@@ -109,6 +129,8 @@ def train_n_imcnns(n, data_path, n_epochs, logging_dir=None, verbose=False):
         The path to the preprocessed PartNet dataset zip-file.
     n_epochs: int
         The amount of epochs for which the model shall be trained for.
+    device: str
+        The device on which the model shall be trained. Either "cpu" or "cuda".
     logging_dir: str
         The logging directory for the training.
     verbose: bool
@@ -118,7 +140,11 @@ def train_n_imcnns(n, data_path, n_epochs, logging_dir=None, verbose=False):
     for repetition in range(n):
         print(f"### Repetition {repetition} ###")
         _, train_hist = train_single_imcnn(
-            data_path, n_epochs=n_epochs, logging_dir=f"{logging_dir}/rep_{repetition}", verbose=verbose
+            data_path,
+            device=device,
+            n_epochs=n_epochs,
+            logging_dir=f"{logging_dir}/rep_{repetition}",
+            verbose=verbose
         )
         training_histories.append(train_hist)
     return training_histories
