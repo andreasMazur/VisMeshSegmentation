@@ -5,6 +5,7 @@ from tqdm import tqdm
 import numpy as np
 import pandas as pd
 import json
+import os
 
 
 def return_mesh_vertex_label_triples(data_path):
@@ -99,9 +100,14 @@ def evaluated_correction_prf_wrapper(noisy_data_path, expert_corrections_path, c
         The name of the resulting *.json-file into which the evaluation measures are stored.
     """
     original_triples = return_mesh_vertex_label_triples(data_path=noisy_data_path)
-    expert_corrections = uniquify_corrections(
-        corrections=np.loadtxt(expert_corrections_path, delimiter=",", dtype=np.int32), noisy_labels=original_triples
-    )
+    if os.path.isfile("./expert_corrections_unique.npy"):
+        expert_corrections = np.load("./expert_corrections_unique.npy")
+    else:
+        expert_corrections = uniquify_corrections(
+            corrections=np.loadtxt(expert_corrections_path, delimiter=",", dtype=np.int32),
+            noisy_labels=original_triples,
+            filename=f"./expert_corrections_unique.npy"
+        )
 
     result_dict = {}
     for file_path in correction_files:
