@@ -100,7 +100,7 @@ def evaluated_correction_prf_wrapper(noisy_data_path, expert_corrections_path, c
     """
     original_triples = return_mesh_vertex_label_triples(data_path=noisy_data_path)
     expert_corrections = uniquify_corrections(
-        corrections=np.load(expert_corrections_path), noisy_labels=original_triples
+        corrections=np.loadtxt(expert_corrections_path, delimiter=",", dtype=np.int32), noisy_labels=original_triples
     )
 
     result_dict = {}
