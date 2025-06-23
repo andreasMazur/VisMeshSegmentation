@@ -73,7 +73,7 @@ def induce_label_correction(csv_array,
     # Filter for current mesh (csv[:, 0] stores mesh indices)
     mesh_corrections = csv_array[csv_array[:, 0] == mesh_idx][::-1]
 
-    # Filter for unique corrections, use last update (mesh_corrections[:, 1] stores vertex indices)
+    # Filter for unique corrections, use LAST update (mesh_corrections[:, 1] stores vertex indices)
     mesh_corrections = mesh_corrections[np.unique(mesh_corrections[:, 1], return_index=True)[1]]
 
     # Store effective changes
@@ -82,15 +82,20 @@ def induce_label_correction(csv_array,
         was_changed = np.zeros(shape=(signal.shape[0]), dtype=np.int32)
         was_changed[mesh_corrections[:, 1]] = 1
 
-        # Correct ineffective changes
-        ineffective_changes = mesh_corrections[mesh_corrections[:, 2] == gt[mesh_corrections[:, 1]], 1]
-        was_changed[ineffective_changes] = 0
+        # Correct ineffective changes - If only mesh-idx and vertex-idx are given, the label will simply be flipped
+        # making all changes effective
+        if len(mesh_corrections.shape) > 2:
+            ineffective_changes = mesh_corrections[mesh_corrections[:, 2] == gt[mesh_corrections[:, 1]], 1]
+            was_changed[ineffective_changes] = 0
 
         np.save(f"{label_changes_path}/mesh_changes_{mesh_idx}", was_changed)
 
     # mesh_corrections[:, 1]: vertex indices to correct
     # mesh_corrections[:, 2]: corrected segmentation labels
-    gt[mesh_corrections[:, 1]] = mesh_corrections[:, 2]
+    if len(mesh_corrections.shape) > 2:
+        gt[mesh_corrections[:, 1]] = mesh_corrections[:, 2]
+    else:
+        gt[mesh_corrections[:, 1]] = 1 - gt[mesh_corrections[:, 1]]
 
     save_mesh_file(f"{mesh_idx}", signal, bc, gt, coord, new_dataset_path)
 
@@ -125,7 +130,7 @@ def convert_dataset_deepview(csv_path,
     # 1. column: shape index
     # 2. column: vertex index
     # 3. column: corrected class label
-    csv = csv[:, [0, 1, 2]].astype(np.int32)
+    csv = csv.astype(np.int32)
 
     if signals_are_coordinates:
         for idx, ((signal, bc), gt) in enumerate(old_dataset):
