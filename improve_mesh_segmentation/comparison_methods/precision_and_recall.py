@@ -82,16 +82,15 @@ def compute_correction_precision_and_recall_and_f1(noisy_labels, corrections, gt
     return precision, recall, f1
 
 
-def evaluated_correction_prf_wrapper(original_triples, unique_dv_corrections, correction_files, result_filename):
+def evaluated_correction_prf_wrapper(noisy_data_path, expert_corrections_path, correction_files, result_filename):
     """Wraps the computation of correction precision, -recall and -f1 score for multiple experiments.
 
     Parameters
     ----------
-    original_triples: np.array
-        An array that contains the noisy, original triples of shape
-        (mesh_idx, vertex_idx, label)
-    unique_dv_corrections: np.array
-        An array that contains the expert (human/DeepView) corrections in form of triples:
+    noisy_data_path: str
+        The path to the noisy dataset.
+    expert_corrections_path: str
+        The path to the array that contains the expert (human/DeepView) corrections in form of triples:
         (mesh_idx, vertex_idx, label)
     correction_files: list
         A list of file-paths that point to *.npy-files that contain corrections in form of tuples:
@@ -99,6 +98,11 @@ def evaluated_correction_prf_wrapper(original_triples, unique_dv_corrections, co
     result_filename: str
         The name of the resulting *.json-file into which the evaluation measures are stored.
     """
+    original_triples = return_mesh_vertex_label_triples(data_path=noisy_data_path)
+    expert_corrections = uniquify_corrections(
+        corrections=np.load(expert_corrections_path), noisy_labels=original_triples
+    )
+
     result_dict = {}
     for file_path in correction_files:
         # Load all corrections: (n_corrections, 2)
@@ -114,9 +118,7 @@ def evaluated_correction_prf_wrapper(original_triples, unique_dv_corrections, co
             # Check unique corrections
             print(f"\nBefore uniquification, method corrections shape: {method_corrections.shape}")
             method_corrections = uniquify_corrections(
-                corrections=method_corrections,
-                noisy_labels=original_triples,
-                filename=None
+                corrections=method_corrections, noisy_labels=original_triples
             )
             print(f"\nAfter uniquification, method corrections shape: {method_corrections.shape}")
             # If the method corrections contain labels, remove them
@@ -125,7 +127,7 @@ def evaluated_correction_prf_wrapper(original_triples, unique_dv_corrections, co
         precision, recall, f1 = compute_correction_precision_and_recall_and_f1(
             noisy_labels=original_triples,
             corrections=method_corrections,
-            gt_corrections=unique_dv_corrections
+            gt_corrections=expert_corrections
         )
         result_dict[f"{file_path}"] = {
             "precision": precision,
