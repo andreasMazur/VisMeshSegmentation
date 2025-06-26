@@ -125,7 +125,12 @@ def convert_dataset_deepview(csv_path,
         os.makedirs(new_dataset_path)
 
     # Compute vertex-to-segment relation
-    csv = pd.read_csv(csv_path).to_numpy()
+    if csv_path[-3:] == "npy":
+        csv = np.load(csv_path)
+    elif csv_path[-3:] == "csv":
+        csv = pd.read_csv(csv_path).to_numpy()
+    else:
+        raise ValueError(f"{csv_path} is not a .npy or .csv file.")
 
     # 1. column: shape index
     # 2. column: vertex index
