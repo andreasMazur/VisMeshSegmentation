@@ -92,7 +92,7 @@ def induce_label_correction(csv_array,
 
     # mesh_corrections[:, 1]: vertex indices to correct
     # mesh_corrections[:, 2]: corrected segmentation labels
-    if len(mesh_corrections.shape) > 2:
+    if mesh_corrections.shape[1] > 2:
         gt[mesh_corrections[:, 1]] = mesh_corrections[:, 2]
     else:
         gt[mesh_corrections[:, 1]] = 1 - gt[mesh_corrections[:, 1]]
