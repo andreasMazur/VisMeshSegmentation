@@ -64,6 +64,13 @@ def run_hypothesis_test(old_dataset_path,
             np.random.seed(trial_idx)
             random.seed(trial_idx)
 
+            print("###############")
+            print("Trial", trial_idx)
+            print("Training data:", zip_file)
+            print("Validation data:", clean_data_path)
+            print("Test data:", clean_data_path)
+            print("###############")
+
             print(f"\nUsing un-corrected data: {idx == 0} | Using corrected data: {idx == 1} | Trial {trial_idx}")
             adaptation_data = PartNetGraspDataset(zip_file, set_type=0, only_signal=True, device=device)
             train_data = PartNetGraspDataset(zip_file, set_type=0, device=device)
