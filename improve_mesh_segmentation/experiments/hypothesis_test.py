@@ -8,6 +8,7 @@ import os
 import scipy as sp
 import numpy as np
 import torch
+import random
 
 
 def run_hypothesis_test(old_dataset_path,
@@ -58,6 +59,11 @@ def run_hypothesis_test(old_dataset_path,
 
         # Train, validate and test IMCNN
         for trial_idx in range(trials):
+            # Set seeds
+            torch.manual_seed(trial_idx)
+            np.random.seed(trial_idx)
+            random.seed(trial_idx)
+
             print(f"\nUsing un-corrected data: {idx == 0} | Using corrected data: {idx == 1} | Trial {trial_idx}")
             adaptation_data = PartNetGraspDataset(zip_file, set_type=0, only_signal=True, device=device)
             train_data = PartNetGraspDataset(zip_file, set_type=0, device=device)
