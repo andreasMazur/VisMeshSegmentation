@@ -43,7 +43,7 @@ def run_hypothesis_test(old_dataset_path,
         os.makedirs(logging_dir)
 
     # Integrate DeepView-corrected labels into the dataset
-    if not Path(new_dataset_path).is_file():
+    if not Path(f"{new_dataset_path}.zip").is_file():
         convert_partnet(old_data_path=old_dataset_path, new_data_path=new_dataset_path, csv_path=csv_path)
     else:
         print(f"Found converted dataset file: '{new_dataset_path}'. Skipping preprocessing.")
@@ -53,7 +53,7 @@ def run_hypothesis_test(old_dataset_path,
     # Start training runs
     test_accuracies, test_losses = [[], []], [[], []]
     for idx, zip_file in enumerate([old_dataset_path, new_dataset_path]):
-        if clean_data_path is not None:
+        if clean_data_path is None:
             clean_data_path = new_dataset_path
 
         # Train, validate and test IMCNN
