@@ -8,6 +8,9 @@ import numpy as np
 import os
 import random
 
+from matplotlib import cm
+import trimesh
+
 
 def apply_symmetric_noise(labels, noise_level):
     """Applies symmetric labels noise to a given label matrix
@@ -41,7 +44,9 @@ def faust_segmentation_generator(path_to_zip,
                                  only_signal=False,
                                  device=None,
                                  set_indices=None,
-                                 segmentation_labels=None):
+                                 segmentation_labels=None,
+                                 return_noisy_segmentation_labels=None,
+                                 noise_level=None):
     """Reads one element of preprocessed FAUST-geoconv_examples into memory per 'next'-call.
 
     Parameters
@@ -68,6 +73,12 @@ def faust_segmentation_generator(path_to_zip,
         if set type is set to 0.
     segmentation_labels: np.ndarray
         The segmentation labels as a numpy array. If given, the segmentation labels will be returned.
+    return_noisy_segmentation_labels: str
+        The path to the noisy segmentation labels. If given, segmentation labels will be loaded and noise will be
+        added. Overwrites 'segmentation_labels' if given.
+    noise_level: float
+        The noise level that is used to add symmetric noise to the segmentation labels. Has to be given if noisy
+        segmentation labels are supposed to be returned.
 
     Returns
     -------
@@ -101,6 +112,11 @@ def faust_segmentation_generator(path_to_zip,
     else:
         indices = set_indices
 
+    if isinstance(return_noisy_segmentation_labels, str):
+        segmentation_labels = np.load(return_noisy_segmentation_labels)
+        assert noise_level is not None, \
+            "If noisy segmentation labels are supposed to be returned, the noise level has to be given."
+
     for idx in indices:
         # Read signal
         signal = torch.tensor(dataset[SIGNAL[idx]], dtype=torch.float32)
@@ -109,10 +125,14 @@ def faust_segmentation_generator(path_to_zip,
         bc = torch.tensor(dataset[BC[idx]], dtype=torch.float32)
 
         # Ground truth: Return the indices of the ones for each row
-        if segmentation_labels is not None:
-            gt = torch.tensor(segmentation_labels[idx], dtype=torch.int64).view(-1,)
-        else:
-            gt = torch.tensor(dataset[GT[idx]], dtype=torch.int64).view(-1,)
+        gt = torch.tensor(dataset[GT[idx]], dtype=torch.int64).view(-1,)
+
+        if segmentation_labels is not None and isinstance(return_noisy_segmentation_labels, str):
+            # Put segmentation labels into correct order 'segmentation_labels[gt]'
+            gt = apply_symmetric_noise(segmentation_labels[gt], noise_level=noise_level)
+        elif segmentation_labels is not None:
+            gt = segmentation_labels[idx]  # Assume that segmentation labels are already in correct order
+        gt = torch.tensor(gt)
 
         if device:
             if only_signal:
@@ -147,8 +167,10 @@ class FaustSegmentationDataset(IterableDataset):
         if only_signal:
             self.segmentation_labels = None
         elif os.path.isfile(f"{logging_dir}/noisy_segmentation_labels.npy"):
+            print(f"Loading existing noisy segmentation labels from: {f'{logging_dir}/noisy_segmentation_labels.npy'}")
             self.segmentation_labels = np.load(f"{logging_dir}/noisy_segmentation_labels.npy")
         else:
+            print("Generating noisy segmentation labels...")
             self.segmentation_labels = self.get_segmentation_labels()
 
         # Init dataset
@@ -164,28 +186,24 @@ class FaustSegmentationDataset(IterableDataset):
         return self.dataset
 
     def get_segmentation_labels(self):
-        # Load original labels
-        segmentation_labels = np.tile(np.load(self.path_to_segmentation_labels), (100, 1))
-
-        # Apply noise to training set only
-        noisy_segmentation_labels = []
+        # Add noise to segmentation labels and store them
         dataset = faust_segmentation_generator(
             self.path_to_zip,
             set_type=3,
             only_signal=self.only_signal,
             device=self.device,
-            segmentation_labels=segmentation_labels
+            return_noisy_segmentation_labels=self.path_to_segmentation_labels,
+            noise_level=self.noise_level
         )
-        for _, labels in tqdm(dataset, desc="Applying symmetric noise to segmentation labels..."):
-            noisy_segmentation_labels.append(
-                apply_symmetric_noise(segmentation_labels[0][labels.cpu()], noise_level=self.noise_level)
-            )
+        noisy_segmentation_labels = []
+        for _, seg_labels in tqdm(dataset, desc="Creating noisy segmentation labels"):
+            noisy_segmentation_labels.append(seg_labels.cpu().numpy())
         noisy_segmentation_labels = np.array(noisy_segmentation_labels)
 
-        # Store noisy labels
+        # Store and return noisy labels
         os.makedirs(self.logging_dir, exist_ok=True)
         np.save(f"{self.logging_dir}/noisy_segmentation_labels.npy", noisy_segmentation_labels)
-        return segmentation_labels
+        return noisy_segmentation_labels
 
     def reset(self):
         self.dataset = faust_segmentation_generator(
