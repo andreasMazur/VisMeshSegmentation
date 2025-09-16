@@ -33,7 +33,7 @@ def training(dataset_path,
         kernel_size=(3, 6),
         segmentation_classes=8,
         template_radius=0.027744965069279016,
-        layer_conf=[(32, 6), (32, 6)]
+        layer_conf=[(128, 6), (128, 6)]
     ).to(device)
     train_data = FaustSegmentationDataset(
         path_to_zip=dataset_path,
@@ -57,7 +57,7 @@ def training(dataset_path,
         path_to_zip=dataset_path,
         path_to_segmentation_labels=segmentation_labels_path,
         logging_dir=logging_dir,
-        set_type=1,
+        set_type=2,
         only_signal=False,
         device=device,
         noise_level=noise_level
