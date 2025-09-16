@@ -5,20 +5,26 @@ from torch import nn
 
 class SegImcnn(nn.Module):
     """A wrapper class for Imcnn models that learn to segment meshes."""
-    def __init__(self, adapt_data, layer_conf=None):
+    def __init__(self,
+                 adapt_data,
+                 signal_dim=3,
+                 kernel_size=(5, 8),
+                 segmentation_classes=2,
+                 template_radius=0.544067211679114,
+                 layer_conf=None):
         super().__init__()
 
         if layer_conf is None:
             layer_conf = [(96, 1)]
 
         self.model = Imcnn(
-            signal_dim=3,  # Use 3D-coordinates as input
-            kernel_size=(5, 8),
+            signal_dim=signal_dim,
+            kernel_size=kernel_size,
             adapt_data=adapt_data,
             layer_conf=layer_conf,
             variant="dirac",
-            segmentation_classes=2,
-            template_radius=0.544067211679114
+            segmentation_classes=segmentation_classes,
+            template_radius=template_radius
         )
 
     def forward(self, x):
