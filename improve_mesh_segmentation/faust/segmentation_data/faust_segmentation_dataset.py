@@ -48,7 +48,7 @@ def faust_segmentation_generator(faust_dataset_path,
             yield signal
     else:
         for (shot, bc), labels in dataset:
-            yield (shot, bc), torch.tensor(segmentation_labels[labels]).to(device)
+            yield (shot, bc), torch.tensor(segmentation_labels[labels].cpu()).to(device)
 
 
 class FaustSegmentationDataset(IterableDataset):
