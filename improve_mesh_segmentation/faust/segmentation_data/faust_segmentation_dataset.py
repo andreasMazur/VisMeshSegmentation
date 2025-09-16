@@ -170,7 +170,6 @@ class FaustSegmentationDataset(IterableDataset):
             print(f"Loading existing noisy segmentation labels from: {f'{logging_dir}/noisy_segmentation_labels.npy'}")
             self.segmentation_labels = np.load(f"{logging_dir}/noisy_segmentation_labels.npy")
         else:
-            print("Generating noisy segmentation labels...")
             self.segmentation_labels = self.get_segmentation_labels()
 
         # Init dataset
