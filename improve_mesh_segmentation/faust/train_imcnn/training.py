@@ -15,16 +15,19 @@ def training(dataset_path,
              n_epochs,
              skip_validation=False,
              skip_testing=False,
-             verbose=False):
+             verbose=False,
+             noise_level=0.0):
     os.makedirs(logging_dir, exist_ok=True)
 
     model = SegImcnn(
         adapt_data=FaustSegmentationDataset(
             path_to_zip=dataset_path,
             path_to_segmentation_labels=segmentation_labels_path,
+            logging_dir=logging_dir,
             set_type=0,
             only_signal=True,
-            device=device
+            device=device,
+            noise_level=noise_level
         ),
         signal_dim=544,
         kernel_size=(3, 6),
@@ -35,23 +38,29 @@ def training(dataset_path,
     train_data = FaustSegmentationDataset(
         path_to_zip=dataset_path,
         path_to_segmentation_labels=segmentation_labels_path,
+        logging_dir=logging_dir,
         set_type=0,
         only_signal=False,
-        device=device
+        device=device,
+        noise_level=noise_level
     )
     val_data = FaustSegmentationDataset(
         path_to_zip=dataset_path,
         path_to_segmentation_labels=segmentation_labels_path,
+        logging_dir=logging_dir,
         set_type=1,
         only_signal=False,
-        device=device
+        device=device,
+        noise_level=noise_level
     )
     test_data = FaustSegmentationDataset(
         path_to_zip=dataset_path,
         path_to_segmentation_labels=segmentation_labels_path,
+        logging_dir=logging_dir,
         set_type=1,
         only_signal=False,
-        device=device
+        device=device,
+        noise_level=noise_level
     )
 
     train_hist = {
