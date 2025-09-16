@@ -44,7 +44,7 @@ def faust_segmentation_generator(faust_dataset_path,
     segmentation_labels = np.load(segmentation_labels_path)
 
     if only_signal:
-        for signal in segmentation_labels:
+        for signal in dataset:
             yield signal
     else:
         for (shot, bc), labels in dataset:
