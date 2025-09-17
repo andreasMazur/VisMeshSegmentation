@@ -8,9 +8,6 @@ import numpy as np
 import os
 import random
 
-from matplotlib import cm
-import trimesh
-
 
 def apply_symmetric_noise(labels, noise_level):
     """Applies symmetric labels noise to a given label matrix
@@ -154,12 +151,14 @@ class FaustSegmentationDataset(IterableDataset):
                  set_type=0,
                  only_signal=False,
                  device=None,
-                 noise_level=0.0):
+                 noise_level=0.0,
+                 set_indices=None):
         self.path_to_zip = path_to_zip
         self.path_to_segmentation_labels = path_to_segmentation_labels
         self.set_type = set_type
         self.only_signal = only_signal
         self.device = device
+        self.set_indices = set_indices
 
         # Remember noisy labels
         self.logging_dir = logging_dir
@@ -178,7 +177,8 @@ class FaustSegmentationDataset(IterableDataset):
             set_type=self.set_type,
             only_signal=self.only_signal,
             device=self.device,
-            segmentation_labels=self.segmentation_labels
+            segmentation_labels=self.segmentation_labels,
+            set_indices=self.set_indices
         )
 
     def __iter__(self):
@@ -210,5 +210,6 @@ class FaustSegmentationDataset(IterableDataset):
             set_type=self.set_type,
             only_signal=self.only_signal,
             device=self.device,
-            segmentation_labels=self.segmentation_labels
+            segmentation_labels=self.segmentation_labels,
+            set_indices=self.set_indices
         )
