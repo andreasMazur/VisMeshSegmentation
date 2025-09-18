@@ -1,6 +1,8 @@
 from improve_mesh_segmentation.comparison_methods.custom_seg_imcnn import CustomSegImcnn
 from improve_mesh_segmentation.partnet_grasp.dataset import PartNetGraspDataset
 
+from tqdm import tqdm
+
 import math
 import torch
 import numpy as np
@@ -52,7 +54,7 @@ def select_candidates(imcnn, dataset, mesh_indices, vertex_candidates, device="c
 def get_vertex_candidates_from_dataset(dataset, available_candidates, mesh_indices):
     """Filters candidate-indices down to what's available in the given dataset."""
     dataset_candidates = torch.zeros((0, 2), dtype=torch.int64)
-    for mesh_idx, ((signal, bc), gt) in zip(mesh_indices, dataset):
+    for mesh_idx, ((signal, bc), gt) in tqdm(zip(mesh_indices, dataset), desc="Selecting candidates"):
         vertex_indices = torch.arange(signal.shape[0])
         mesh_index = torch.full_like(vertex_indices, mesh_idx)
         mesh_vertex_indices = torch.cat(
@@ -104,7 +106,7 @@ def incv(data_path, epochs, remove_ratio=0.1, max_iterations=10):
     all_selected = torch.zeros((0, 2), dtype=torch.int64)
     for iterations in range(max_iterations):
         print(
-            f"\nCurrently in iteration: {iterations + 1}/{max_iterations} | "
+            f"\nCurrently in iteration: {iterations + 1}/{max_iterations + 1} | "
             f"Available candidates: {all_candidates.shape[0]} | "
             f"Made selections: {all_selected.shape[0]}"
         )
