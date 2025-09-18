@@ -71,7 +71,7 @@ def incv(data_path, segmentation_labels_path, logging_dir, epochs, remove_ratio=
     all_selected = torch.zeros((0, 2), dtype=torch.int64)
     for iterations in range(max_iterations):
         print(
-            f"\nCurrently in iteration: {iterations + 1}/{max_iterations + 1} | "
+            f"\nCurrently in iteration: {iterations + 1}/{max_iterations} | "
             f"Available candidates: {all_candidates.shape[0]} | "
             f"Made selections: {all_selected.shape[0]}"
         )
