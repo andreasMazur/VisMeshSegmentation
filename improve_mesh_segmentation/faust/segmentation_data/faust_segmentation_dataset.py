@@ -43,7 +43,8 @@ def faust_segmentation_generator(path_to_zip,
                                  set_indices=None,
                                  segmentation_labels=None,
                                  return_noisy_segmentation_labels=None,
-                                 noise_level=None):
+                                 noise_level=None,
+                                 put_into_correct_order=False):
     """Reads one element of preprocessed FAUST-geoconv_examples into memory per 'next'-call.
 
     Parameters
@@ -76,6 +77,8 @@ def faust_segmentation_generator(path_to_zip,
     noise_level: float
         The noise level that is used to add symmetric noise to the segmentation labels. Has to be given if noisy
         segmentation labels are supposed to be returned.
+    put_into_correct_order: bool
+        Orders segmentation labels according to ground truth correspondences.
 
     Returns
     -------
@@ -127,6 +130,8 @@ def faust_segmentation_generator(path_to_zip,
         if segmentation_labels is not None and isinstance(return_noisy_segmentation_labels, str):
             # Put segmentation labels into correct order 'segmentation_labels[gt]'
             gt = apply_symmetric_noise(segmentation_labels[gt], noise_level=noise_level)
+        elif put_into_correct_order:
+            gt = segmentation_labels[idx][gt]
         elif segmentation_labels is not None:
             gt = segmentation_labels[idx]  # Assume that segmentation labels are already in correct order
         gt = torch.tensor(gt)
@@ -152,7 +157,8 @@ class FaustSegmentationDataset(IterableDataset):
                  only_signal=False,
                  device=None,
                  noise_level=0.0,
-                 set_indices=None):
+                 set_indices=None,
+                 put_into_correct_order=False):
         self.path_to_zip = path_to_zip
         self.path_to_segmentation_labels = path_to_segmentation_labels
         self.set_type = set_type
@@ -161,6 +167,7 @@ class FaustSegmentationDataset(IterableDataset):
         self.set_indices = set_indices
 
         # Remember noisy labels
+        self.put_into_correct_order = put_into_correct_order
         self.logging_dir = logging_dir
         self.noise_level = noise_level
         if only_signal:
@@ -178,7 +185,8 @@ class FaustSegmentationDataset(IterableDataset):
             only_signal=self.only_signal,
             device=self.device,
             segmentation_labels=self.segmentation_labels,
-            set_indices=self.set_indices
+            set_indices=self.set_indices,
+            put_into_correct_order=self.put_into_correct_order
         )
 
     def __iter__(self):
@@ -192,7 +200,8 @@ class FaustSegmentationDataset(IterableDataset):
             only_signal=self.only_signal,
             device=self.device,
             return_noisy_segmentation_labels=self.path_to_segmentation_labels,
-            noise_level=self.noise_level
+            noise_level=self.noise_level,
+            put_into_correct_order=False
         )
         noisy_segmentation_labels = []
         for _, seg_labels in tqdm(dataset, desc="Creating noisy segmentation labels"):
@@ -211,5 +220,6 @@ class FaustSegmentationDataset(IterableDataset):
             only_signal=self.only_signal,
             device=self.device,
             segmentation_labels=self.segmentation_labels,
-            set_indices=self.set_indices
+            set_indices=self.set_indices,
+            put_into_correct_order=self.put_into_correct_order
         )
