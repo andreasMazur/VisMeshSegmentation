@@ -18,7 +18,7 @@ def apply_symmetric_noise(labels, noise_level, n_classes=8):
         The original labels as a numpy array.
     noise_level: float
         The chance of flipping a label to one other class. The probability of keeping the original label is
-        1 - 7 * noise_level, since there are 8 classes in total.
+        1 - n_classes * noise_level, since there are 8 classes in total.
     n_classes: int
         The number of classes. Defaults to 8, since there are 8 classes in the FAUST data set.
 
