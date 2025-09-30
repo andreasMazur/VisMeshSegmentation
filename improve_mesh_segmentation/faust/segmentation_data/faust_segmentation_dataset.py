@@ -9,7 +9,7 @@ import os
 import random
 
 
-def apply_symmetric_noise(labels, noise_level):
+def apply_symmetric_noise(labels, noise_level, n_classes=8):
     """Applies symmetric labels noise to a given label matrix
 
     Parameters
@@ -19,6 +19,8 @@ def apply_symmetric_noise(labels, noise_level):
     noise_level: float
         The chance of flipping a label to one other class. The probability of keeping the original label is
         1 - 7 * noise_level, since there are 8 classes in total.
+    n_classes: int
+        The number of classes. Defaults to 8, since there are 8 classes in the FAUST data set.
 
     Returns
     -------
@@ -27,11 +29,11 @@ def apply_symmetric_noise(labels, noise_level):
     """
     noisy_labels = []
     for label in labels:
-        maintain_true_class_probability = 1 - 7 * noise_level
+        maintain_true_class_probability = 1 - (n_classes - 1) * noise_level
 
-        p = np.full(shape=(8,), fill_value=noise_level)
+        p = np.full(shape=(n_classes,), fill_value=noise_level)
         p[label] = maintain_true_class_probability
-        noisy_labels.append(np.random.choice(range(8), p=p))
+        noisy_labels.append(np.random.choice(range(n_classes), p=p))
 
     return np.array(noisy_labels)
 
