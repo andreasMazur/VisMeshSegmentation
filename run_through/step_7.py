@@ -3,6 +3,7 @@ from improve_mesh_segmentation.comparison_methods.incv import incv
 from run_through.step_3 import PARTNET_GRASP, EXPERIMENT_DIRECTORY
 
 import numpy as np
+import os
 
 
 """ Step 7: Run correction algorithms on PartNet-Grasp
@@ -18,6 +19,8 @@ if __name__ == "__main__":
     # M_1: INCV
     #################################
     INCV_LOGS = f"{EXPERIMENT_DIRECTORY}/incv_logs"
+    os.makedirs(INCV_LOGS, exist_ok=True)
+
     for training_epochs in range(1, 5):
         for max_iteration in range(1, 3):
             for remove_ratio in [0.1, 0.2, 0.3, 0.4, 0.5]:
