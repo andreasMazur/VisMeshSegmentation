@@ -1,6 +1,8 @@
 from improve_mesh_segmentation.training.train_imcnn import train_single_imcnn
 from run_through.step_3 import EXPERIMENT_DIRECTORY, PARTNET_GRASP
 
+import torch
+
 
 """ Step 4: Train an initial IMCNN
 
@@ -14,6 +16,7 @@ if __name__ == "__main__":
     train_single_imcnn(
         data_path=f"{PARTNET_GRASP}.zip",
         n_epochs=10,
+        device="cuda" if torch.cuda.is_available() else "cpu",
         logging_dir=LOGGING_DIR,
         skip_validation=False,
         skip_testing=False,

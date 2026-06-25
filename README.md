@@ -1,15 +1,14 @@
-# Visualizing and Improving 3D Mesh Segmentation with DeepView
+# Evaluating automatic label noise detection in 3D segmentation with realistic label noise
 
 This repository contains the **code** and an **experiment protocol** to replicate the results published in:
 
 ```
-@article{mrlsh:24,
-  title={Visualizing and Improving 3D Mesh Segmentation with DeepView},
-  author={Mazur, Andreas and Roberts, Isaac and Leins, David and Schulz, Alexander and Hammer, Barbara},
-  booktitle={ESANN},
-  year={2024},
-  pages={649--654}
-  doi={https://doi.org/10.14428/esann/2024.ES2024-135}
+@article{mrlsh:26,
+  title={Evaluating automatic label noise detection in 3D segmentation with realistic label noise},
+  author={Mazur, Andreas and Roberts, Isaac and Leins, David P and Schulz, Alexander and Hammer, Barbara},
+  journal={Neurocomputing},
+  year={2026},
+  doi={10.1016/j.neucom.2026.133587}
 }
 ```
 
