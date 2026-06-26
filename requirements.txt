@@ -7,3 +7,9 @@ scipy==1.11.4
 numpy==1.22.0
 pandas==1.5.3
 open3d==0.18.0
+scikit-learn
+cleanlab
+sklvq
+umap-learn
+tqdm
+deepview @ git+https://github.com/LucaHermes/DeepView.git@master
