@@ -91,6 +91,11 @@ class PartNetGraspDataset(IterableDataset):
     def __iter__(self):
         return self.dataset
 
+    def __len__(self):
+        len = sum(1 for _ in self.dataset)
+        self.reset()
+        return len
+
     def reset(self):
         """Loads a new generator with the same configuration as the initial generator."""
         self.dataset = processed_partnet_grasp_generator(
