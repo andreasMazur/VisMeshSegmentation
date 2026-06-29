@@ -12,18 +12,17 @@ from torcheval.metrics.functional import multiclass_accuracy
 import numpy as np
 from pathlib import Path
 
-from rich.progress import track, Progress, BarColumn, TimeRemainingColumn, TextColumn, SpinnerColumn, MofNCompleteColumn
+from rich.progress import Progress, BarColumn, TimeRemainingColumn, TextColumn, SpinnerColumn, MofNCompleteColumn
 from rich.live import Live
 from rich.table import Table
 from rich.panel import Panel
 from termcolor import cprint
-from IPython import embed
 
 def train(
         data_path,
         correction_file_path,
-	knn_progress,
-	train_progress,
+        knn_progress,
+        train_progress,
         seed=42,
         milestone = [30, 60],
         n_epochs=90,
@@ -61,13 +60,7 @@ def train(
     optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), weight_decay=weight_decay)
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=milestone, gamma=gamma)
 
-    best_acc = 0.
-    best_epoch = 0
-    best_weights = None
-
     big_comp = set()
-    patience = 65
-    no_improve_counter = 0
 
     best_num_clean_labels = 0
     best_noisy_data_indices = []
@@ -291,7 +284,7 @@ def train(
             np.save(f"results/stats_{when_to_denoise}_{denoise_every_n_epoch}_{k_outlier}_{k_cc}_{zeta}.npy", stats)
 
     df = train_dataset.get_results_from_noisy_data_indices(best_noisy_data_indices)
-    df.to_csv(f'results/pointnet_corrections_{when_to_denoise}_{denoise_every_n_epoch}_{k_outlier}_{k_cc}_{zeta}.csv', header=False, index=False)
+    df.to_csv(f'results/corrections_pointnet_{when_to_denoise}_{denoise_every_n_epoch}_{k_outlier}_{k_cc}_{zeta}.csv', header=False, index=False)
     best_model = Path(f'./trained_models/pointnet_{when_to_denoise}_{denoise_every_n_epoch}_{k_outlier}_{k_cc}_{zeta}_tmp.pth')
     best_model.rename(best_model.with_stem(best_model.stem.replace('_tmp', '')))
 
@@ -300,22 +293,17 @@ def train(
 
 
 
-if __name__ == "__main__":
-
-    start_cleans = [1, 2, 3, 4]
-
-    everys = [1, 2, 3]
-
+def train_models(
+    partnet_grasp_path,
+    correction_file_path,
     k_ccs = [
-        10, 50, 250#, 1000, 3000, 5000
-    ]
-
-    zetas = [
-        0.1, 0.25, 0.5, 0.75, 0.9, 1.0
-    ]                
-
+       5, 10, 25, 50, 100, 250, 500
+    ],
+    start_cleans = [1, 2, 3, 4],
+    everys = [1, 2, 3],
+    zetas = [0.1, 0.25, 0.5, 0.75, 0.9, 1.0],                
     k_outliers = [32, 18, 64]
-
+):
     total_num_models = len(start_cleans) * len(everys) * len(k_ccs) * len(zetas) * len(k_outliers)
 
     overall_progress = Progress(
@@ -377,14 +365,14 @@ if __name__ == "__main__":
 
                             n_epochs = (start_clean+1)+5*every
                             cprint(f"\n\n>> Training with every={every}, start_clean={start_clean}, k_outlier={k_outlier}, k_cc={k_cc}, zeta={zeta} for {n_epochs} epochs <<", "green")
-                            csv_path = Path(f'./results/pointnet_corrections_{start_clean}_{every}_{k_outlier}_{k_cc}_{zeta}.csv')
+                            csv_path = Path(f'./results/corrections_pointnet_{start_clean}_{every}_{k_outlier}_{k_cc}_{zeta}.csv')
                             if csv_path.exists():
                                 cprint(f"Skipping {csv_path} as it already exists", "yellow")
                                 overall_progress.advance(overall_task)
                                 continue
                             train(
-                                data_path="../../SegLabelCorrection/data/partnet_grasp/partnet_grasp.zip",
-                                correction_file_path="../improve_mesh_segmentation/data_correction/partnet_correction.csv",
+                                data_path=partnet_grasp_path,
+                                correction_file_path=correction_file_path,
                                 denoise_every_n_epoch=every,
                                 when_to_denoise=start_clean,
                                 k_outlier=k_outlier,

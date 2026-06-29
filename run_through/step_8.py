@@ -13,6 +13,7 @@ from improve_mesh_segmentation.comparison_methods.local_methods import (
     local_knn_es_faust,
     local_knn_umap_faust,
 )
+from improve_mesh_segmentation.comparison_methods.topofilter.run_topofilter_faust import run_topofilter_faust_experiments
 
 from run_through.comparison_hyperparameters import (
     CV_EPOCHS,
@@ -37,9 +38,9 @@ if __name__ == "__main__":
     FAUST_ZIP = "PATH/TO/faust_preprocess.zip"
     SEGMENTATION_LABELS = "PATH/TO/segmentation_labels.npy"
 
-    noise_ds_1 = (f"{FAUST_ROOT}/faust_segmentation_logs_noise_lvl_0.007", "faust_low_noise", 0.007)
-    noise_ds_2 = (f"{FAUST_ROOT}/faust_segmentation_logs_noise_lvl_0.036", "faust_mid_noise", 0.036)
-    noise_ds_3 = (f"{FAUST_ROOT}/faust_segmentation_logs_noise_lvl_0.071", "faust_high_noise", 0.071)
+    noise_ds_1 = (f"{FAUST_ROOT}/faust_segmentation_logs_noise_lvl_0.007", "low_noise", 0.007)
+    noise_ds_2 = (f"{FAUST_ROOT}/faust_segmentation_logs_noise_lvl_0.036", "mid_noise", 0.036)
+    noise_ds_3 = (f"{FAUST_ROOT}/faust_segmentation_logs_noise_lvl_0.071", "high_noise", 0.071)
 
     for (logging_dir, dataset_id, noise_level) in [noise_ds_1, noise_ds_2, noise_ds_3]:
         dataset_path = f"{logging_dir}.zip"
@@ -91,9 +92,13 @@ if __name__ == "__main__":
         )
 
         #################################
-        # M_3: TopoFilter (colleague's responsibility)
+        # M_3: TopoFilter
         #################################
-        pass
+        run_topofilter_faust_experiments(
+            dataset_path=FAUST_ZIP,
+            logging_dir=logging_dir,
+            topofilter_params=params["topofilter_params"],
+        )
 
         #################################
         # M_4: Ensemble Majority

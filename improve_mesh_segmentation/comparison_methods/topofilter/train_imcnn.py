@@ -12,18 +12,72 @@ from torcheval.metrics.functional import multiclass_accuracy
 import numpy as np
 from pathlib import Path
 
-from rich.progress import track, Progress, BarColumn, TimeRemainingColumn, TextColumn, SpinnerColumn, MofNCompleteColumn
+from rich.progress import Progress, BarColumn, TimeRemainingColumn, TextColumn, SpinnerColumn, MofNCompleteColumn
 from rich.live import Live
 from rich.table import Table
 from rich.panel import Panel
 from termcolor import cprint
-from IPython import embed
+
+def filter_deepview_corrections(corrections, noisy_labels, filename=None):
+    """Filters deepview corrections to the latest corrections."""
+    unique_cors = []
+    # for idx, cor_suggestion in track(enumerate(corrections), description="Filtering DV corrections..."):
+    for idx, cor_suggestion in enumerate(corrections):
+        # Get last/latest correction suggestion
+        cor_suggestion = corrections[(cor_suggestion[:2] == corrections[:, :2]).all(axis=-1)][-1]
+        if len(unique_cors) > 0 and (cor_suggestion[:2] == np.array(unique_cors)[:, :2]).all(axis=-1).any():
+            continue
+
+        # Only add corrections that actually change the label
+        noisy_label_idx = np.where((cor_suggestion[:2] == noisy_labels[:, :2]).all(axis=-1))[0][0]
+        if noisy_labels[noisy_label_idx][-1] != cor_suggestion[-1]:
+            unique_cors.append(cor_suggestion)
+
+    # Store unique deepview corrections
+    unique_cors = np.array(unique_cors)
+    if filename is not None:
+        np.save(filename, unique_cors)
+
+    return unique_cors
+
+def compute_tps(noisy_labels, corrections, gt_corrections):
+    """Compute amount of true positive labels: Corrections that change actually invalid labels."""
+    true_positives = 0
+    # for cor_suggestion in track(corrections, description="Counting correct corrections..."):
+    for i, cor_suggestion in enumerate(corrections):
+        # Get noisy vertex that shall be flipped according to 'cor_suggestion'
+        noisy_vertex = noisy_labels[(cor_suggestion[:2] == noisy_labels[:, :2]).all(axis=-1)][0]
+        assert noisy_vertex[-1] != cor_suggestion[-1], "Noisy vertex and correction suggestion must differ in label!"
+
+        # Increment true positives in case gt-correction changes it too
+        gt_correction = gt_corrections[(noisy_vertex[:2] == gt_corrections[:, :2]).all(axis=-1)]
+        if gt_correction.shape[0] > 0 and gt_correction[0, -1] != noisy_vertex[-1]:
+            true_positives += 1
+    return true_positives
+
+
+def compute_correction_precision_and_recall_and_f1(noisy_labels, corrections, gt_corrections):
+    """Computes correction precision and recall of suggested corrections."""
+    # Compute amount of true positives: Amount of correction suggestions that are correct
+    true_positives = compute_tps(noisy_labels, corrections, gt_corrections)
+
+    cprint(f"Called f1 compute with corrections.shape: {corrections.shape}", "yellow")
+    if corrections.shape[0] == 0:
+        return 0., 0., 0.
+    precision = true_positives / corrections.shape[0]
+    recall = true_positives / gt_corrections.shape[0]
+    f1 = 2 / (1/precision + 1/recall)
+
+    # Compute amount of corrections to be made
+    return precision, recall, f1
 
 def train(
         data_path,
         correction_file_path,
         knn_progress,
         train_progress,
+        results_path : Path,
+        unq_dv_triplets_path : Path,
         seed=42,
         milestone = [30, 60],
         n_epochs=90,
@@ -40,7 +94,6 @@ def train(
 
     torch.manual_seed(seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # device = 'cpu'
     cprint(f"Using device: {device}", "blue")
 
     train_dataset = PartNetGraspDataset(
@@ -50,6 +103,20 @@ def train(
     )
     train_len = len(train_dataset)
     curr_train_set = train_dataset
+
+    cprint("Creating original triplets for train dataset ...", "blue")
+    curr_shape_idx = 0
+    shape_ids = []
+    local_vert_ids = []
+    labels = []
+    for shape_idx, global_vert_idxs in enumerate(train_dataset.shape_indices):
+        shape_ids.extend([shape_idx] * len(global_vert_idxs))
+        local_vert_ids.extend(global_vert_idxs-curr_shape_idx)
+        labels.extend(train_dataset.labels[global_vert_idxs])
+        curr_shape_idx += len(global_vert_idxs)
+    original_triplets = np.array([shape_ids, local_vert_ids, labels]).T
+
+    unq_dv_triplets = np.load(unq_dv_triplets_path)
 
     val_dataset = PartNetGraspDataset(
         path_to_zip=data_path,
@@ -62,15 +129,9 @@ def train(
     optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.999), weight_decay=weight_decay)
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=milestone, gamma=gamma)
 
-    best_acc = 0.
-    best_epoch = 0
-    best_weights = None
-
     big_comp = set()
-    patience = 65
-    no_improve_counter = 0
 
-    best_num_clean_labels = 0
+    best_f1 = 0
     best_noisy_data_indices = []
     
     full_set_verts = train_dataset.num_verts
@@ -269,7 +330,6 @@ def train(
             # Here we only filter out noisy data through local indices, so we don't need to update the set
             # we still keep it to display the stats 
             train_set_ignore_noisy.ignore_noise_data(noisy_data_indices)
-            # curr_train_set = train_set_ignore_noisy
 
             clean_data_num = len(big_comp.intersection(set(np.where(true_labels_all == np.argmax(labels_all, axis=1))[0].tolist())))
             noise_data_num = len(big_comp) - clean_data_num
@@ -277,12 +337,16 @@ def train(
             cprint(f">> Noise data num: {noise_data_num}", "yellow")
             cprint(f">> Clean data num: {clean_data_num}", "yellow")
 
-            if clean_data_num > best_num_clean_labels:
-                cprint(f">> Found better big component with {clean_data_num} vertices", "green")
-                best_num_clean_labels = clean_data_num
+            data = train_dataset.get_results_from_noisy_data_indices(noisy_data_indices).to_numpy()
+            prec, rec, f1 = compute_correction_precision_and_recall_and_f1(original_triplets, data, unq_dv_triplets)
+            cprint(f"current values - prec: {prec}; rec: {rec}; f1: {f1}", "yellow")
+
+            if f1 > best_f1:
+                cprint(f">> Found embedding with {clean_data_num} vertices and f1 {f1}", "green")
+                best_f1 = f1
                 best_noisy_data_indices = noisy_data_indices
                 # Save model
-                torch.save(model.state_dict(), f'./trained_models/imcnn_{when_to_denoise}_{denoise_every_n_epoch}_{k_outlier}_{k_cc}_{zeta}_tmp.pth')
+                torch.save(model.state_dict(), f'./fixed_clearing/trained_models/imcnn_{when_to_denoise}_{denoise_every_n_epoch}_{k_outlier}_{k_cc}_{zeta}_tmp.pth')
 
             # Compute purity of the component
             cc_size = len(big_comp)
@@ -305,54 +369,26 @@ def train(
             stats['val_acc'].append(mean_val_accuracy)
             stats['val_loss'].append(mean_val_loss)
 
-            np.save(f"results/imcnn_stats_{when_to_denoise}_{denoise_every_n_epoch}_{k_outlier}_{k_cc}_{zeta}.npy", stats)
+            np.save(f"{results_path.absolute()}/imcnn_stats_{when_to_denoise}_{denoise_every_n_epoch}_{k_outlier}_{k_cc}_{zeta}.npy", stats)
 
     df = train_dataset.get_results_from_noisy_data_indices(best_noisy_data_indices)
-    df.to_csv(f'results/imcnn_corrections_{when_to_denoise}_{denoise_every_n_epoch}_{k_outlier}_{k_cc}_{zeta}.csv', header=False, index=False)
-    best_model = Path(f'./trained_models/imcnn_{when_to_denoise}_{denoise_every_n_epoch}_{k_outlier}_{k_cc}_{zeta}_tmp.pth')
+    df.to_csv(f'{results_path.absolute()}/corrections_imcnn_{when_to_denoise}_{denoise_every_n_epoch}_{k_outlier}_{k_cc}_{zeta}.csv', header=False, index=False)
+    best_model = Path(f'{results_path.absolute()}/trained_models/imcnn_{when_to_denoise}_{denoise_every_n_epoch}_{k_outlier}_{k_cc}_{zeta}_tmp.pth')
     best_model.rename(best_model.with_stem(best_model.stem.replace('_tmp', '')))
 
 
 
-if __name__ == "__main__":
-
-    every = 10
-    start_clean = 15
-    k_outlier = 32
-    k_cc = 5
-    zeta = 0.5
-
-    # train(
-    #     data_path="../../SegLabelCorrection/data/partnet_grasp/partnet_grasp.zip",
-    #     correction_file_path="../improve_mesh_segmentation/data_correction/partnet_correction.csv",
-    #     denoise_every_n_epoch=every,
-    #     when_to_denoise=start_clean,
-    #     k_outlier=k_outlier,
-    #     k_cc=k_cc,
-    #     zeta=zeta,
-    # )
-
-    # every =       [ 5,  5,  5, 10,  5,  5,  5,  5]
-    # start_clean = [ 5,  5, 10, 10, 15, 20, 25, 30]
-    # k_outlier =   [32, 32, 32, 32, 32, 32, 32, 32]
-    # k_cc =        [ 4,  5,  5,  5,  5,  5,  5,  5]
-    # zeta =        [.5, .5, .5, .5, .5, .5, .5, .5] 
-
-
-    k_ccs = [
-        10, 50, 250#, 1000, 3000, 5000
-    ]
-
-    start_cleans = [1, 2, 3, 4]
-
-    everys = [1, 2, 3]
-
-    zetas = [
-        0.1, 0.25, 0.5, 0.75, 0.9, 1.0
-    ]                
-
-    k_outliers = [32, 18, 64]
-
+def train_models(
+    data_path,
+    correction_file_path,
+    unq_v_triplets_path,
+    results_path,
+    k_ccs = [5, 10, 25, 50, 100, 250, 500],
+    start_cleans = [1, 2, 3, 4],
+    everys = [1, 2, 3],
+    zetas = [0.1, 0.25, 0.5, 0.75, 0.9, 1.0],                
+    k_outliers = [32, 18, 64],
+):
     total_num_models = len(start_cleans) * len(everys) * len(k_ccs) * len(zetas) * len(k_outliers)
 
     overall_progress = Progress(
@@ -414,14 +450,14 @@ if __name__ == "__main__":
 
                             n_epochs = (start_clean+1)+5*every
                             cprint(f"\n\n>> Training with start_clean={start_clean}, every={every}, k_outlier={k_outlier}, k_cc={k_cc}, zeta={zeta} for {n_epochs} epochs <<", "green")
-                            csv_path = Path(f'./results/imcnn_corrections_{start_clean}_{every}_{k_outlier}_{k_cc}_{zeta}.csv')
+                            csv_path = Path(f'{results_path.absolute()}/corrections_imcnn_{start_clean}_{every}_{k_outlier}_{k_cc}_{zeta}.csv')
                             if csv_path.exists():
                                 cprint(f"Skipping {csv_path} as it already exists", "yellow")
                                 overall_progress.advance(overall_task)
                                 continue
                             train(
-                                data_path="../../SegLabelCorrection/data/partnet_grasp/partnet_grasp.zip",
-                                correction_file_path="../improve_mesh_segmentation/data_correction/partnet_correction.csv",
+                                data_path=data_path,
+                                correction_file_path=correction_file_path,
                                 denoise_every_n_epoch=every,
                                 when_to_denoise=start_clean,
                                 k_outlier=k_outlier,
@@ -430,5 +466,7 @@ if __name__ == "__main__":
                                 n_epochs=n_epochs,
                                 knn_progress=knn_progress,
                                 train_progress=train_progress,
+                                results_path=results_path,
+                                unq_v_triplets_path=unq_v_triplets_path
                             )
                             overall_progress.advance(overall_task)

@@ -33,7 +33,7 @@ FAUST_CL_CV_K = 25
 FAUST_EM_CV_K = 20
 
 FAUST_PARAMETERS = {
-    "faust_low_noise": {
+    "low_noise": {
         "global_kmeans": 16,
         "global_knn": 5,
         "global_lvq": 5,
@@ -46,8 +46,15 @@ FAUST_PARAMETERS = {
         "local_knn_umap_n_components": 5,
         "local_kmeans_es": 11,
         "local_knn_es": 50,
+        "topofilter_params": {
+            "start_cleans": [4],
+            "everys": [3],
+            "k_ccs": [10],
+            "k_outliers": [32],
+            "zetas": [0.25],
+        },
     },
-    "faust_mid_noise": {
+    "mid_noise": {
         "global_kmeans": 8,
         "global_knn": 25,
         "global_lvq": 4,
@@ -60,8 +67,15 @@ FAUST_PARAMETERS = {
         "local_knn_umap_n_components": 10,
         "local_kmeans_es": 11,
         "local_knn_es": 10,
+        "topofilter_params": {
+            "start_cleans": [3],
+            "everys": [3],
+            "k_ccs": [10],
+            "k_outliers": [32],
+            "zetas": [0.5],
+        },
     },
-    "faust_high_noise": {
+    "high_noise": {
         "global_kmeans": 9,
         "global_knn": 5,
         "global_lvq": 4,
@@ -74,5 +88,42 @@ FAUST_PARAMETERS = {
         "local_knn_umap_n_components": 4,
         "local_kmeans_es": 11,
         "local_knn_es": 50,
+        "topofilter_params": {
+            "start_cleans": [2],
+            "everys": [2],
+            "k_ccs": [10],
+            "k_outliers": [32],
+            "zetas": [0.25],
+        },
+    },
+}
+
+PARTNET_GRASP_PARAMETERS = {
+    "low_noise": {
+        "topofilter_params": {
+            "start_cleans": [4],
+            "everys": [3],
+            "k_ccs": [10],
+            "k_outliers": [32],
+            "zetas": [0.25],
+        },
+    },
+    "mid_noise": {
+        "topofilter_params": {
+            "start_cleans": [3],
+            "everys": [3],
+            "k_ccs": [10],
+            "k_outliers": [32],
+            "zetas": [0.5],
+        },
+    },
+    "high_noise": {
+        "topofilter_params": {
+            "start_cleans": [2],
+            "everys": [2],
+            "k_ccs": [10],
+            "k_outliers": [32],
+            "zetas": [0.25],
+        },
     },
 }
