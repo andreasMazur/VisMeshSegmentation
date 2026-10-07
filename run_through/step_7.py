@@ -13,6 +13,7 @@ from improve_mesh_segmentation.comparison_methods.local_methods import (
     local_knn_es_partnet,
     local_knn_umap_partnet,
 )
+from improve_mesh_segmentation.comparison_methods.topofilter.run_topofilter_partnetgrasp import run_topofilter_experiments
 
 from run_through.comparison_hyperparameters import (
     CV_EPOCHS,
@@ -83,9 +84,20 @@ if __name__ == "__main__":
     )
 
     #################################
-    # M_3: TopoFilter (colleague's responsibility)
+    # M_3: TopoFilter
     #################################
-    pass
+    run_topofilter_experiments(
+        model_type="all",
+        partnet_grasp_path=DATA_PATH,
+        correction_file_path=f"{EXPERIMENT_DIRECTORY}/data_correction/partnet_correction.csv",
+        unq_v_triplets_path=f"{EXPERIMENT_DIRECTORY}/data_correction/unq_v_triplets.npy",
+        results_path=f"{EXPERIMENT_DIRECTORY}/topofilter_results",
+        start_cleans=[3],
+        everys=[2],
+        k_outliers=[64],
+        k_ccs=[10],
+        zetas=[0.5],
+    )
 
     #################################
     # M_4: Ensemble Majority
