@@ -24,7 +24,7 @@ We suggest to setup a local [Conda](https://conda.io/projects/conda/en/latest/us
 using **Python 3.10** and install the repository as follows:
 
 ```bash
-git clone https://github.com/andreasMazur/VisMeshSegmentation.git
+git clone https://github.com/andreasMazur/labelnoise_3d.git
 pip install -r requirements.txt
 pip install pyshot@git+https://github.com/uhlmanngroup/pyshot@master
 pip install deepview@git+https://github.com/LucaHermes/DeepView@master
